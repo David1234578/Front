@@ -1,26 +1,48 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.5rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
 .header {
   text-align: center;
+  margin-bottom: 3rem;
 }
 
 .title {
-  margin: 0;
-  font-size: 2rem;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
 }
 
 .subtitle {
-  margin: 0.25rem 0 0;
-  color: #666;
+  font-size: 1.125rem;
+  color: #c0cbe0;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .grid {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
