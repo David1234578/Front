@@ -1,30 +1,36 @@
+
 export const products = [
+  {
+    id: 1,
+    name: "Laptop",
+    category: "Electronics",
+    price: 1200,
+    image: "https://images.pexels.com/photos/29765806/pexels-photo-29765806.jpeg",
+    description: "A high-performance laptop suitable for all your computing needs."
+  },
+  {
+    id: 2,
+    name: "Smartphone",
+    category: "Electronics",
+    price: 800,
+    image: "https://images.pexels.com/photos/11216260/pexels-photo-11216260.jpeg",
+    description: "A latest model smartphone with cutting-edge features."
+  },
     {
-        id: 1,
-        name: "Laptop",
-        price: 999.99,
-        description: "Laptop potente con processador rápido y gran capacidad de almacenamiento.",
-        image: "https://example.com/laptop.jpg"
-    },
+    id: 3,
+    name: "Headphones",
+    category: "Electronics",
+    price: 150,
+    image: "https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg",
+    description: "Noise-cancelling headphones for an immersive audio experience."
+  },
     {
-        id: 2,
-        name: "Smartphone",
-        price: 499.99,
-        description: "Smartphone con pantalla AMOLED y cámara de alta resolución.",
-        image: "https://example.com/smartphone.jpg"
-    },
-    {
-        id: 3,
-        name: "Headphones",
-        price: 199.99,
-        description: "Auriculares inalámbricos con cancelación de ruido y sonido de alta calidad.",
-        image: "https://example.com/headphones.jpg" 
-    },
-    {
-        id: 4,
-        name: "Smartwatch",
-        price: 299.99,
-        description: "Reloj inteligente con monitor de actividad física y notificaciones en tiempo real.",
-        image: "https://example.com/smartwatch.jpg"
-    }
-];
+    id: 4,
+    name: "Tablet",
+    category: "Electronics",
+    price: 300,
+    image: "https://images.pexels.com/photos/6373045/pexels-photo-6373045.jpeg",
+    description: "A portable tablet for entertainment and productivity."
+  },
+]
+ 
