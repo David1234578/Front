@@ -1,14 +1,16 @@
-function ProductCard(  name, price, description, image, category) {
+import styles from './ProductCard.module.css';
+
+function ProductCard({name, price, description, image, category}) {
 return ( 
-    <article className="product-card">
-        <img src={image} alt={name} className="product-image" />
-        <div className="product-info">
-            <span className="product-category">{category}</span>
-            <h3 className="product-name">{name}</h3>
-            <p className="product-description">{description}</p>
-            <div className="product-footer">
-            <span className="product-price">${price.toFixed(2)}</span>
-            <button className="btn-like">Me gusta</button>
+    <article className={styles.productCard}>
+        <img src={image} alt={name} className={styles.productImage} />
+        <div className={styles.productInfo}>
+            <span className={styles.productCategory}>{category}</span>
+            <h3 className={styles.productName}>{name}</h3>
+            <p className={styles.productDescription}>{description}</p>
+            <div className={styles.productFooter}>
+            <span className={styles.productPrice}>${price.toFixed(2)}</span>
+            <button className={styles.btnLike}>Me gusta</button>
             </div>
         </div>
     </article>
