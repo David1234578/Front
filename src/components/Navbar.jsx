@@ -1,18 +1,18 @@
 import styles from "../styles/Navbar.module.css";
-
+ 
 import logo from "../assets/react.svg";
-
+ 
 function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut }) {
   const userLabel = user?.name ?? "Invitado";
   const isLoggedIn = Boolean(user);
-
+ 
   return (
     <nav className={styles.navbar}>
       <div className={styles.brand}>
         <img className={styles.logo} src={logo} alt="Logo" />
         <span className={styles.brandName}>Sistema Ventas</span>
       </div>
-
+ 
       <div className={styles.links}>
         <button
           type="button"
@@ -36,10 +36,10 @@ function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut }) {
           Carrito
         </button>
       </div>
-
+ 
       <div className={styles.auth}>
         <span className={styles.userName}>{userLabel}</span>
-
+ 
         {isLoggedIn ? (
           <button type="button" className={styles.authBtn} onClick={onSignOut}>
             Sign out
@@ -53,5 +53,5 @@ function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut }) {
     </nav>
   );
 }
-
+ 
 export default Navbar;

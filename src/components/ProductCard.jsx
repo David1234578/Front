@@ -1,20 +1,20 @@
-import {useState} from 'react'
-import styles from './ProductCard.module.css';
-
+import { useState } from 'react';
+import styles from '../styles/ProductCard.module.css';
+ 
 function ProductCard({name, price, description, image, category}) {
-    const [likes, setLikes] = useState(0);
-    const [isLiked, setIsLiked] = useState(false)
-
-    const handleLike = () => {
-        if(isLiked) {
-            setLikes(likes-1);
+    const{likes,setLikes} = useState(0);
+    const{isLiked,setIsLiked} = useState(false);
+ 
+    const hanleLike = () => {
+        if (isLiked){
+            setLikes(likes -1);
             setIsLiked(false);
-        } else {
+        } else{
             setLikes(likes + 1);
             setIsLiked(true);
         }
     };
-return ( 
+    return (
     <article className={styles.productCard}>
         <img src={image} alt={name} className={styles.productImage} />
         <div className={styles.productInfo}>
@@ -23,16 +23,17 @@ return (
             <p className={styles.productDescription}>{description}</p>
             <div className={styles.productFooter}>
             <span className={styles.productPrice}>${price.toFixed(2)}</span>
-            <button 
-                className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
-                onClick={handleLike}
-            >
-                  { isLiked ? '❤️' : '🤍' } { likes } Me gusta
+            <button
+                    className = {`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
+                    onClick = { hanleLike }
+                    >
+                        { isLiked ? '❤️' : '🤍' } { likes } Me gusta
             </button>
             </div>
         </div>
     </article>
 )
 }
-
+ 
 export default ProductCard;
+ 
