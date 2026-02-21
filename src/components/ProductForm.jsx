@@ -142,6 +142,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
 
         <label className={styles.field}>
           <span className={styles.label}>Descripción</span>
+        </label>
           <textarea
             className={styles.textarea}
             name="description"
@@ -150,8 +151,6 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
             placeholder="Describe el producto..."
             rows={3}
           />
-        </label>
-
         <div className={styles.actions}>
           {onCancel ? (
             <button
