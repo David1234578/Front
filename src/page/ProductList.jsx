@@ -14,6 +14,10 @@ const handleAddProduct = (product) => {
   });
 };
 
+const handleDeleteProduct = (id) => {
+  setProductsState((prev) => prev.filter((product) => product.id !== id));
+};
+
 function ProductList() {
     const [productsState, setProductsState] = useState(products);
  
@@ -37,6 +41,7 @@ function ProductList() {
                         stock={product.stock}
                         image={product.image}
                         description={product.description}
+                        onDelete={() => handleDeleteProduct(product.id)}
                     />
                 ))}
             </div>
