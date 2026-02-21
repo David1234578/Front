@@ -3,8 +3,10 @@ import { products } from '../data/Product';
 import ProductCard from './ProductCard';
 import styles from './ProductList.module.css';
 import ProductForm from "./ProductForm";
- import ProductForm from "./ProductForm";
+import ProductForm from "./ProductForm";
 
+
+const [editingProduct, setEditingProduct] = useState(null);
 const handleAddProduct = (product) => {
   setProductsState((prev) => {
     const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
@@ -16,6 +18,24 @@ const handleAddProduct = (product) => {
 
 const handleDeleteProduct = (id) => {
   setProductsState((prev) => prev.filter((product) => product.id !== id));
+};
+
+const handleEditStart = (product) => {
+  setEditingProduct(product);
+};
+
+const handleEditCancel = () => {
+  setEditingProduct(null);
+};
+
+const handleEditSubmit = (updatedProduct) => {
+  setProductsState((prev) =>
+    prev.map((product) =>
+      product.id === updatedProduct.id ? updatedProduct : product,
+    ),
+  );
+
+  setEditingProduct(null);
 };
 
 function ProductList() {
@@ -30,7 +50,12 @@ function ProductList() {
                     Encuentra los mejores productos de tecnologia pra tu setup
                 </p>
             </header>
-                <ProductForm onSubmit={handleAddProduct} />
+             <ProductForm
+                initialValues={editingProduct}
+                isEditing={Boolean(editingProduct)}
+                onCancel={handleEditCancel}
+                onSubmit={editingProduct ? handleEditSubmit : handleAddProduct}
+            />   
             <div className={styles.grid}>
                 {productsState.map((product) => (
                     <ProductCard
@@ -41,7 +66,8 @@ function ProductList() {
                         stock={product.stock}
                         image={product.image}
                         description={product.description}
-                        onDelete={() => handleDeleteProduct(product.id)}
+                        onEdit={() => handleEditStart(product)}
+                        onDelete={() => handleDeleteProduct(product.id)}  
                     />
                 ))}
             </div>
