@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { products } from '../data/Product';
+import { products } from "../data/products";
 import ProductCard from '../components/ProductCard';
-import styles from './ProductList.module.css';
+import styles from "../styles/ProductList.module.css";
 import ProductForm from "../components/ProductForm";
  
 function ProductList() {
@@ -105,4 +105,4 @@ function ProductList() {
 }
  
 export default ProductList;
- 
+
