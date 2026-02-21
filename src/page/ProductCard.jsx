@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
  
-function ProductCard({name, price, description, image, category}) {
+function ProductCard({name, price, stock, description, image, category}) {
     const{likes,setLikes} = useState(0);
     const{isLiked,setIsLiked} = useState(false);
  
@@ -23,6 +23,7 @@ function ProductCard({name, price, description, image, category}) {
             <p className={styles.productDescription}>{description}</p>
             <div className={styles.productFooter}>
             <span className={styles.productPrice}>${price.toFixed(2)}</span>
+            <p className={styles.productStock}>Stock: {stock}</p>
             <button
                     className = {`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
                     onClick = { hanleLike }
