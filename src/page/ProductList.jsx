@@ -5,8 +5,13 @@ import styles from './ProductList.module.css';
 import ProductForm from "./ProductForm";
  import ProductForm from "./ProductForm";
 
- const handleAddProduct = (product) => {
-  console.log("Producto recibido desde el form:", product);
+const handleAddProduct = (product) => {
+  setProductsState((prev) => {
+    const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
+    const nextId = maxId + 1;
+
+    return [...prev, { ...product, id: nextId }];
+  });
 };
 
 function ProductList() {
