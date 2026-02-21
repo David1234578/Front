@@ -1,47 +1,58 @@
 import { useState } from "react";
 import { products } from '../data/Product';
-import ProductCard from './ProductCard';
+import ProductCard from '../components/ProductCard';
 import styles from './ProductList.module.css';
-import ProductForm from "./ProductForm";
-import ProductForm from "./ProductForm";
-
-
-const [editingProduct, setEditingProduct] = useState(null);
-const handleAddProduct = (product) => {
-  setProductsState((prev) => {
-    const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
-    const nextId = maxId + 1;
-
-    return [...prev, { ...product, id: nextId }];
-  });
-};
-
-const handleDeleteProduct = (id) => {
-  setProductsState((prev) => prev.filter((product) => product.id !== id));
-};
-
-const handleEditStart = (product) => {
-  setEditingProduct(product);
-};
-
-const handleEditCancel = () => {
-  setEditingProduct(null);
-};
-
-const handleEditSubmit = (updatedProduct) => {
-  setProductsState((prev) =>
-    prev.map((product) =>
-      product.id === updatedProduct.id ? updatedProduct : product,
-    ),
-  );
-
-  setEditingProduct(null);
-};
-
+import ProductForm from "../components/ProductForm";
+ 
 function ProductList() {
     const [productsState, setProductsState] = useState(products);
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [isFormOpen, setIsFormOpen] = useState(false);
  
-
+    const handleOpenCreate = () => {
+      setEditingProduct(null);
+      setIsFormOpen(true);
+    };
+ 
+    const handleCloseForm = () => {
+      setEditingProduct(null);
+      setIsFormOpen(false);
+    };
+ 
+    const handleAddProduct = (product) => {
+      setProductsState((prev) => {
+        const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
+        const nextId = maxId + 1;
+ 
+        return [...prev, { ...product, id: nextId }];
+      });
+      handleCloseForm();
+    };
+ 
+    const handleDeleteProduct = (id) => {
+      setProductsState((prev) => prev.filter((product) => product.id !== id));
+    };
+ 
+    const handleEditStart = (product) => {
+      setEditingProduct(product);
+      setIsFormOpen(true);
+    };
+ 
+    const handleEditCancel = () => {
+      setEditingProduct(null);
+    };
+ 
+    const handleEditSubmit = (updatedProduct) => {
+      setProductsState((prev) =>
+        prev.map((product) =>
+          product.id === updatedProduct.id ? updatedProduct : product,
+        ),
+      );
+ 
+      setEditingProduct(null);
+      handleCloseForm();
+    };
+ 
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -50,15 +61,30 @@ function ProductList() {
                     Encuentra los mejores productos de tecnologia pra tu setup
                 </p>
             </header>
-             <ProductForm
-                initialValues={editingProduct}
-                isEditing={Boolean(editingProduct)}
-                onCancel={handleEditCancel}
-                onSubmit={editingProduct ? handleEditSubmit : handleAddProduct}
-            />   
-            <div className={styles.grid}>
-                {productsState.map((product) => (
-                    <ProductCard
+ 
+            {
+              isFormOpen ? (
+                <ProductForm
+                  initialValues={editingProduct}
+                  isEditing={Boolean(editingProduct)}
+                  onCancel={handleCloseForm}
+                  onSubmit={editingProduct ? handleEditSubmit : handleAddProduct}
+                />
+              ) : (
+                <>
+                  <div className={styles.toolbar}>
+                    <button
+                      className={styles.btnAdd}
+                      type="button"
+                      onClick={handleOpenCreate}
+                    >
+                      Agregar producto
+                    </button>
+                  </div>
+ 
+                  <div className={styles.grid}>
+                    {productsState.map((product) => (
+                      <ProductCard
                         key={product.id}
                         name={product.name}
                         category={product.category}
@@ -67,12 +93,16 @@ function ProductList() {
                         image={product.image}
                         description={product.description}
                         onEdit={() => handleEditStart(product)}
-                        onDelete={() => handleDeleteProduct(product.id)}  
-                    />
-                ))}
-            </div>
+                        onDelete={() => handleDeleteProduct(product.id)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )
+            }
         </div>
     );
 }
  
 export default ProductList;
+ 
