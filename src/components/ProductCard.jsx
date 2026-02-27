@@ -1,19 +1,13 @@
 import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
     
-    function ProductCard({name, price, stock, description, image, category, onEdit, onDelete}) {
-    const {likes, setLikes} = useState(0);
-    const {isLiked, setIsLiked} = useState(false);
-
-    const handleLike = () => {
-        if (isLiked){
-            setLikes(likes -1);
-            setIsLiked(false);
-        } else{
-            setLikes(likes + 1);
-            setIsLiked(true);
-        }
-    };
+    function ProductCard({name, price, stock, description, image, category, onEdit, onDelete}) 
+    { const [likes, setLikes] = useState(0); 
+        const [isLiked, setIsLiked] = useState(false); 
+        const handleLike = () => { 
+            if (isLiked) { setLikes(likes - 1); 
+                setIsLiked(false); 
+            } else { setLikes(likes + 1); setIsLiked(true); } };
 
     return (
         <article className={styles.productCard}>
