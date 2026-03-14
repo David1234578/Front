@@ -2,6 +2,17 @@ import { useEffect } from 'react';
 
 import styles from '../styles/ProductDetailsModal.module.css';
 
+const copCurrencyFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0,
+});
+
+const formatCOP = (value) => {
+  const amount = Number(value);
+  return Number.isFinite(amount) ? copCurrencyFormatter.format(amount) : 'COP 0';
+};
+
 function ProductDetailsModal({ isOpen, product, onClose }) {
   useEffect(() => {
     if (!isOpen) return;

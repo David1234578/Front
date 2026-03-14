@@ -12,6 +12,8 @@ function ProductList() {
   const [productsState, setProductsState] = useState(loadProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -52,6 +54,11 @@ function ProductList() {
     if (editingProduct?.id === id) {
       handleCloseForm();
     }
+
+    if (selectedProduct?.id === id) {
+      setSelectedProduct(null);
+      setIsModalOpen(false);
+    }
   };
 
   const handleEditStart = (product) => {
@@ -64,6 +71,16 @@ function ProductList() {
       prev.map((product) => (product.id === updatedProduct.id ? updatedProduct : product))
     );
     handleCloseForm();
+  };
+
+  const handleOpenDetails = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
@@ -103,10 +120,16 @@ function ProductList() {
                 description={product.description}
                 onDelete={() => handleDeleteProduct(product.id)}
                 onEdit={() => handleEditStart(product)}
-                onDetails={() => (product)}
+                onDetails={() => handleOpenDetails(product)}
               />
             ))}
           </div>
+
+          <ProductDetailsModal
+            isOpen={isModalOpen}
+            product={selectedProduct}
+            onClose={handleCloseDetails}
+          />
         </>
       )}
     </div>
