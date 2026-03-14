@@ -4,6 +4,7 @@ import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
 import styles from '../styles/CategoryProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
+import { addToCart } from '../utils/cartStorage';
 import { loadProducts } from '../utils/productsStorage';
 
 function CategoryProducts({ category, onBack }) {
@@ -35,6 +36,10 @@ function CategoryProducts({ category, onBack }) {
   const handleCloseDetails = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product, 1);
   };
 
   return (
@@ -76,6 +81,7 @@ function CategoryProducts({ category, onBack }) {
               image={product.image}
               description={product.description}
               onDetails={() => handleOpenDetails(product)}
+              onAddToCart={() => handleAddToCart(product)}
             />
           ))}
         </div>

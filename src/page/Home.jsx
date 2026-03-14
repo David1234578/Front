@@ -5,6 +5,17 @@ import { loadProducts } from '../utils/productsStorage';
 
 function Home({ onOpenCategory }) {
   const [productsState] = useState(loadProducts);
+  const [query, setQuery] = useState('');
+
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const searchResults = useMemo(() => {
+    if (!normalizedQuery) return [];
+
+    return productsState
+      .filter((product) => String(product.name ?? '').toLowerCase().includes(normalizedQuery))
+      .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+  }, [normalizedQuery, productsState]);
 
   const categoryTiles = useMemo(() => {
     const bestByCategory = new Map();
@@ -40,6 +51,49 @@ function Home({ onOpenCategory }) {
         <h1 className={homeStyles.title}>Inicio</h1>
         <p className={homeStyles.subtitle}>Selecciona una categoría para ver sus productos</p>
       </header>
+
+      <section className={homeStyles.searchSection} aria-label="Buscador de productos">
+        <label htmlFor="home-product-search" className={homeStyles.searchLabel}>
+          Buscar por nombre
+        </label>
+        <input
+          id="home-product-search"
+          type="search"
+          className={homeStyles.searchInput}
+          placeholder="Ej: Laptop, Tablet..."
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+
+        {normalizedQuery ? (
+          <div className={homeStyles.searchResults}>
+            {searchResults.length === 0 ? (
+              <p className={homeStyles.searchEmpty}>No encontramos productos con ese nombre.</p>
+            ) : (
+              <ul className={homeStyles.searchList}>
+                {searchResults.map((product) => (
+                  <li key={product.id} className={homeStyles.searchItem}>
+                    <img className={homeStyles.searchImage} src={product.image} alt={product.name} />
+
+                    <div className={homeStyles.searchInfo}>
+                      <p className={homeStyles.searchName}>{product.name}</p>
+                      <p className={homeStyles.searchMeta}>Categoria: {product.category}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={homeStyles.searchAction}
+                      onClick={() => onOpenCategory?.(product.category)}
+                    >
+                      Ver categoria
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null}
+      </section>
 
       <div className={homeStyles.categoryGrid}>
         {categoryTiles.map(({ category, product }) => (

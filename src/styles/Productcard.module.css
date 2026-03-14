@@ -115,6 +115,7 @@
   flex-wrap: wrap;
 }
 
+.btnCart,
 .btnDetails,
 .btnEdit,
 .btnDelete {
@@ -128,6 +129,17 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     filter 0.2s ease;
+}
+
+.btnCart {
+  color: #1f2937;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.32);
+}
+
+.btnCart:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(245, 158, 11, 0.4);
 }
 
 .btnDetails {
@@ -178,12 +190,14 @@
   box-shadow: 0 10px 18px rgba(239, 68, 68, 0.28);
 }
 
+.btnCart:active,
 .btnDetails:active,
 .btnEdit:active,
 .btnDelete:active {
   transform: translateY(0);
 }
 
+.btnCart:focus-visible,
 .btnDetails:focus-visible,
 .btnEdit:focus-visible,
 .btnDelete:focus-visible {
@@ -206,6 +220,7 @@
     gap: 0.5rem;
   }
 
+  .btnCart,
   .btnDetails,
   .btnEdit,
   .btnDelete {

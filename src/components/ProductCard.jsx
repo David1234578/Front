@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
    
-    function ProductCard({name, price, stock, description,rating, image, category, onEdit, onDelete, onDetails})
+  function ProductCard({name, price, stock, description,rating, image, category, onEdit, onDelete, onDetails, onAddToCart, showDescription = true, showLikeButton = true})
     { const [likes, setLikes] = useState(0);
         const [isLiked, setIsLiked] = useState(false);
         const handleLike = () => {
@@ -20,19 +20,27 @@ import styles from '../styles/ProductCard.module.css';
                         {'⭐'.repeat(Math.round(rating))} ({rating.toFixed(1)})
                     </div>
                 ) : null}
-                <p className={styles.productDescription}>{description}</p>
+                {showDescription ? <p className={styles.productDescription}>{description}</p> : null}
                 <p className={styles.productStock}>Stock: {stock}</p>
                 <div className={styles.productFooter}>
                     <span className={styles.productPrice}>${price.toFixed(2)}</span>
+                  {showLikeButton ? (
                     <button
-                        className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
-                        onClick={handleLike}
+                      className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
+                      onClick={handleLike}
                     >
-                        {isLiked ? '❤️' : '🤍'} {likes} Me gusta
+                      {isLiked ? '❤️' : '🤍'} {likes} Me gusta
                     </button>
+                  ) : null}
                 </div>
-                {onDetails || onEdit || onDelete ? (
+                {onDetails || onEdit || onDelete || onAddToCart ? (
           <div className={styles.cardActions}>
+            {onAddToCart ? (
+              <button type="button" className={styles.btnCart} onClick={onAddToCart}>
+                Agregar al carrito
+              </button>
+            ) : null}
+
             {onDetails ? (
               <button type="button" className={styles.btnDetails} onClick={onDetails}>
                 Más información

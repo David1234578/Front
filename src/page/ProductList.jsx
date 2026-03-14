@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
-import ProductDetailsModal from '../components/ProductDetailsModal';
 import styles from '../styles/ProductList.module.css';
 import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
 
@@ -12,8 +11,6 @@ function ProductList() {
   const [productsState, setProductsState] = useState(loadProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -54,11 +51,6 @@ function ProductList() {
     if (editingProduct?.id === id) {
       handleCloseForm();
     }
-
-    if (selectedProduct?.id === id) {
-      setSelectedProduct(null);
-      setIsModalOpen(false);
-    }
   };
 
   const handleEditStart = (product) => {
@@ -71,16 +63,6 @@ function ProductList() {
       prev.map((product) => (product.id === updatedProduct.id ? updatedProduct : product))
     );
     handleCloseForm();
-  };
-
-  const handleOpenDetails = (product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseDetails = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
   };
 
   return (
@@ -118,18 +100,13 @@ function ProductList() {
                 stock={product.stock}
                 image={product.image}
                 description={product.description}
+                showDescription={false}
+                showLikeButton={false}
                 onDelete={() => handleDeleteProduct(product.id)}
                 onEdit={() => handleEditStart(product)}
-                onDetails={() => handleOpenDetails(product)}
               />
             ))}
           </div>
-
-          <ProductDetailsModal
-            isOpen={isModalOpen}
-            product={selectedProduct}
-            onClose={handleCloseDetails}
-          />
         </>
       )}
     </div>
