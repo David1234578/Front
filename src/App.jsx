@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useInRouterContext } from 'react-router-dom';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
 import Cart from './page/Cart';
 import CategoryProducts from './page/CategoryProducts';
+import Checkout from './page/Checkout';
 import Home from './page/Home';
 import ProductList from './page/ProductList';
 
+
 import './App.css';
 
-function App() {
-  const [activePage, setActivePage] = useState('home');
+function AppContent() {
   const [user, setUser] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [cartNotice, setCartNotice] = useState('');
   const cartToastTimeoutRef = useRef(null);
 
@@ -51,34 +52,6 @@ function App() {
     };
   }, []);
 
-  const handleNavigate = (page) => {
-    setActivePage(page);
-
-    if (page !== 'category') {
-      setSelectedCategory(null);
-    }
-  };
-
-  const handleOpenCategory = (category) => {
-    setSelectedCategory(category);
-    setActivePage('category');
-  };
-
-  const handleBackFromCategory = () => {
-    setSelectedCategory(null);
-    setActivePage('home');
-  };
-
-  const page = useMemo(() => {
-    if (activePage === 'category') {
-      return <CategoryProducts category={selectedCategory} onBack={handleBackFromCategory} />;
-    }
-    if (activePage === 'products') return <ProductList />;
-    if (activePage === 'cart') return <Cart />;
-
-    return <Home onOpenCategory={handleOpenCategory} />;
-  }, [activePage, selectedCategory]);
-
   const handleSignIn = () => {
     setUser({ name: 'Usuario' });
   };
@@ -90,14 +63,21 @@ function App() {
   return (
     <div className="app">
       <Header
-        activePage={activePage}
-        onNavigate={handleNavigate}
         user={user}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
       />
 
-      <main className="main">{page}</main>
+      <main className="main">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/category/:categoryName" element={<CategoryProducts />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
 
       {cartNotice ? (
         <div className="cartToast" role="status" aria-live="polite">
@@ -107,6 +87,20 @@ function App() {
 
       <Footer />
     </div>
+  );
+}
+
+function App() {
+  const hasRouterContext = useInRouterContext();
+
+  if (hasRouterContext) {
+    return <AppContent />;
+  }
+
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

@@ -1,0 +1,65 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(6, 182, 212, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(15, 23, 42, 0.35), transparent 55%),
+    rgba(2, 6, 23, 0.64);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.15rem;
+  z-index: 50;
+  animation: fadeIn 0.28s ease;
+}
+
+.modal {
+  width: 100%;
+  max-width: 960px;
+  background: linear-gradient(160deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 26px 62px rgba(15, 23, 42, 0.34);
+  overflow: hidden;
+  animation: modalUp 0.35s cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+@media (max-width: 768px) {
+  .overlay {
+    padding: 0.85rem;
+  }
+
+  .modal {
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal {
+    animation: none;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

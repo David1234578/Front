@@ -1,11 +1,19 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import homeStyles from '../styles/Home.module.css';
 import { loadProducts } from '../utils/productsStorage';
 
-function Home({ onOpenCategory }) {
+function Home() {
+  const navigate = useNavigate();
   const [productsState] = useState(loadProducts);
   const [query, setQuery] = useState('');
+
+  const openCategory = (category) => {
+    const safeCategory = String(category ?? '').trim();
+    if (!safeCategory) return;
+    navigate(`/category/${encodeURIComponent(safeCategory)}`);
+  };
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -83,7 +91,7 @@ function Home({ onOpenCategory }) {
                     <button
                       type="button"
                       className={homeStyles.searchAction}
-                      onClick={() => onOpenCategory?.(product.category)}
+                      onClick={() => openCategory(product.category)}
                     >
                       Ver categoria
                     </button>
@@ -101,7 +109,7 @@ function Home({ onOpenCategory }) {
             key={category}
             type="button"
             className={homeStyles.categoryTile}
-            onClick={() => onOpenCategory?.(category)}
+            onClick={() => openCategory(category)}
             aria-label={`Ver productos de ${category}`}
           >
             <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />

@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-
+import AppModal from './AppModal';
 import styles from '../styles/ProductDetailsModal.module.css';
 
 const copCurrencyFormatter = new Intl.NumberFormat('es-CO', {
@@ -14,19 +13,6 @@ const formatCOP = (value) => {
 };
 
 function ProductDetailsModal({ isOpen, product, onClose }) {
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
   if (!isOpen || !product) {
     return null;
   }
@@ -34,20 +20,8 @@ function ProductDetailsModal({ isOpen, product, onClose }) {
   const ratingValue = Number(product.rating);
   const rating = Number.isFinite(ratingValue) ? ratingValue : null;
 
-  const handleOverlayMouseDown = (event) => {
-    if (event.target === event.currentTarget) {
-      onClose?.();
-    }
-  };
-
   return (
-    <div className={styles.overlay} onMouseDown={handleOverlayMouseDown}>
-      <div
-        className={styles.modal}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Detalle de ${product.name}`}
-      >
+    <AppModal isOpen={isOpen} onClose={onClose} ariaLabel={`Detalle de ${product.name}`} className={styles.modal}>
         <header className={styles.header}>
           <div>
             <p className={styles.category}>{product.category}</p>
@@ -85,8 +59,7 @@ function ProductDetailsModal({ isOpen, product, onClose }) {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </AppModal>
   );
 }
 

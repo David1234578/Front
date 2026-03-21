@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
@@ -7,7 +8,10 @@ import productListStyles from '../styles/ProductList.module.css';
 import { addToCart } from '../utils/cartStorage';
 import { loadProducts } from '../utils/productsStorage';
 
-function CategoryProducts({ category, onBack }) {
+function CategoryProducts() {
+  const navigate = useNavigate();
+  const { categoryName } = useParams();
+  const category = decodeURIComponent(String(categoryName ?? ''));
   const [query, setQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,7 +49,7 @@ function CategoryProducts({ category, onBack }) {
   return (
     <section className={styles.container}>
       <header className={styles.header}>
-        <button type="button" className={styles.btnBack} onClick={onBack}>
+        <button type="button" className={styles.btnBack} onClick={() => navigate('/')}>
           Volver
         </button>
 

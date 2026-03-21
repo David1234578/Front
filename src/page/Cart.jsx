@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import styles from '../styles/Cart.module.css';
 import { clearCart, loadCart, removeFromCart, updateCartItemQuantity } from '../utils/cartStorage';
@@ -15,6 +16,7 @@ const formatCOP = (value) => {
 };
 
 function Cart() {
+  const navigate = useNavigate();
   const [items, setItems] = useState(loadCart);
 
   useEffect(() => {
@@ -176,7 +178,11 @@ function Cart() {
               </div>
             </div>
 
-            <button type="button" className={styles.checkoutBtn}>
+            <button
+              type="button"
+              className={styles.checkoutBtn}
+              onClick={() => navigate('/checkout')}
+            >
               Proceder al pago
             </button>
 
