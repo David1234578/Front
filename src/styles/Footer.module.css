@@ -1,13 +1,80 @@
 .footer {
   width: 100%;
-  margin-top: 2rem;
-  padding: 1.5rem 1rem 0.5rem;
-  text-align: center;
-  color: rgba(248, 250, 252, 0.7);
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  margin-top: 1rem;
+  padding: 1.05rem 1rem 0.8rem;
+  color: #9cb3d0;
+  border: 1px solid #264464;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #091528, #10203a);
+  box-shadow: var(--shadow-soft);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.76rem;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: #7df9ff;
+  font-size: 0.74rem;
+}
+
+.brand {
+  margin: 0.22rem 0 0;
+  font-family: 'Teko', 'Montserrat', sans-serif;
+  font-size: clamp(1.06rem, 2.8vw, 1.35rem);
+  letter-spacing: 0.03em;
+  color: #f3f8ff;
+}
+
+.copy {
+  margin: 0.42rem 0 0;
+  color: #9cb3d0;
+  max-width: 520px;
+  font-size: 0.88rem;
+}
+
+.metaBlock {
+  border: 1px solid #2f4f73;
+  border-radius: 12px;
+  padding: 0.62rem 0.72rem;
+  background: rgba(8, 20, 36, 0.78);
+}
+
+.metaLabel {
+  margin: 0;
+  color: #39ff14;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.metaValue {
+  margin: 0.18rem 0 0.46rem;
+  color: #bdd0e9;
+  font-size: 0.86rem;
 }
 
 .text {
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.01em;
+  border-top: 1px solid #264464;
+  padding-top: 0.75rem;
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94add0;
+}
+
+@media (max-width: 740px) {
+  .top {
+    grid-template-columns: 1fr;
+  }
 }

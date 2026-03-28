@@ -76,25 +76,43 @@ function Cart() {
   return (
     <section className={styles.cartSection}>
       <header className={styles.hero}>
-        <p className={styles.kicker}>Resumen de compra</p>
-        <h1 className={styles.title}>Tu carrito</h1>
+        <p className={styles.kicker}>Carrito de compra</p>
+        <h1 className={styles.title}>Revision de pedido</h1>
         <p className={styles.subtitle}>
-          Gestiona cantidades, revisa totales y deja lista tu orden con una vista clara y rápida.
+          Ajusta cantidades, revisa los valores y continua con el pago cuando tu pedido este listo.
         </p>
+
+        <div className={styles.overviewRow}>
+          <article className={styles.overviewItem}>
+            <span>Productos</span>
+            <strong>{totals.units}</strong>
+          </article>
+          <article className={styles.overviewItem}>
+            <span>Subtotal</span>
+            <strong>{formatCOP(totals.subtotal)}</strong>
+          </article>
+          <article className={styles.overviewItem}>
+            <span>Total estimado</span>
+            <strong>{formatCOP(totals.total)}</strong>
+          </article>
+        </div>
       </header>
 
       {items.length === 0 ? (
         <article className={styles.emptyState}>
-          <h2 className={styles.emptyTitle}>Aún no tienes productos en el carrito</h2>
+          <h2 className={styles.emptyTitle}>Tu carrito esta vacio</h2>
           <p className={styles.emptyText}>
-            Ve a Productos o Categorías y usa el botón Agregar al carrito para empezar tu compra.
+            Todavia no agregas productos. Explora el catalogo para empezar tu pedido.
           </p>
+          <button type="button" className={styles.emptyAction} onClick={() => navigate('/')}>
+            Ir al inicio
+          </button>
         </article>
       ) : (
         <div className={styles.layout}>
           <article className={styles.itemsPanel}>
             <div className={styles.itemsHeader}>
-              <h2 className={styles.panelTitle}>Productos seleccionados</h2>
+              <h2 className={styles.panelTitle}>Productos del pedido</h2>
               <p className={styles.panelMeta}>
                 {totals.units} {totals.units === 1 ? 'unidad' : 'unidades'}
               </p>
@@ -154,7 +172,9 @@ function Cart() {
           </article>
 
           <aside className={styles.summaryPanel}>
-            <h2 className={styles.panelTitle}>Resumen</h2>
+            <h2 className={styles.panelTitle}>Resumen de pago</h2>
+
+            <p className={styles.summaryHint}>Los valores finales se confirman al finalizar la compra.</p>
 
             <div className={styles.summaryRows}>
               <div className={styles.summaryRow}>

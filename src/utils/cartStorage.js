@@ -1,5 +1,27 @@
-const STORAGE_KEY = 'cart';
+import { loadSession } from './authStorage';
+
+const STORAGE_KEY_PREFIX = 'cart';
 const ITEM_ADDED_EVENT = 'cart:item-added';
+
+const resolveCartStorageKey = () => {
+  const session = loadSession();
+  const sessionId = Number(session?.id);
+
+  if (!session?.email) {
+    return `${STORAGE_KEY_PREFIX}:anonymous`;
+  }
+
+  if (Number.isFinite(sessionId) && sessionId > 0) {
+    return `${STORAGE_KEY_PREFIX}:${session.role}:${sessionId}`;
+  }
+
+  return `${STORAGE_KEY_PREFIX}:${session.role}:${String(session.email).toLowerCase()}`;
+};
+
+const canUseCart = () => {
+  const session = loadSession();
+  return Boolean(session) && session.role !== 'admin';
+};
 
 const toFiniteNumber = (value, fallback = 0) => {
   const parsed = Number(value);
@@ -41,8 +63,9 @@ const emitItemAdded = (detail) => {
 
 export function loadCart() {
   if (typeof window === 'undefined') return [];
+  if (!canUseCart()) return [];
 
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(resolveCartStorageKey());
   if (!stored) return [];
 
   try {
@@ -59,20 +82,23 @@ export function loadCart() {
 
 export function saveCart(items) {
   if (typeof window === 'undefined') return [];
+  if (!canUseCart()) return [];
 
   const normalized = Array.isArray(items)
     ? items
         .map(normalizeCartItem)
         .filter((item) => Number.isFinite(item.id) && item.id > 0)
     : [];
-
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+ 
+  window.localStorage.setItem(resolveCartStorageKey(), JSON.stringify(normalized));
   emitCartChange();
 
   return normalized;
 }
 
 export function addToCart(product, quantity = 1) {
+  if (!canUseCart()) return [];
+
   const productId = toFiniteNumber(product?.id, 0);
   if (productId <= 0) return loadCart();
 
@@ -115,6 +141,8 @@ export function addToCart(product, quantity = 1) {
 }
 
 export function updateCartItemQuantity(productId, quantity) {
+  if (!canUseCart()) return [];
+
   const id = toFiniteNumber(productId, 0);
   if (id <= 0) return loadCart();
 
@@ -140,6 +168,8 @@ export function updateCartItemQuantity(productId, quantity) {
 }
 
 export function removeFromCart(productId) {
+  if (!canUseCart()) return [];
+
   const id = toFiniteNumber(productId, 0);
   if (id <= 0) return loadCart();
 
@@ -152,4 +182,4 @@ export function clearCart() {
   return saveCart([]);
 }
 
-export const CART_STORAGE_KEY = STORAGE_KEY;
+export const CART_STORAGE_KEY = STORAGE_KEY_PREFIX;

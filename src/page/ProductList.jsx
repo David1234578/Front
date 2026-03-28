@@ -11,6 +11,7 @@ function ProductList() {
   const [productsState, setProductsState] = useState(loadProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -65,13 +66,35 @@ function ProductList() {
     handleCloseForm();
   };
 
+  const filteredProducts = productsState.filter((product) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+
+    return String(product.name ?? '').toLowerCase().includes(q);
+  });
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Productos Informáticos</h1>
+        <h1 className={styles.title}>Gestión de catálogo</h1>
         <p className={styles.subtitle}>
-          Encuentra los mejores productos de tecnología para tu setup
+          Administra inventario, edita fichas y mantén actualizado el catálogo de la tienda.
         </p>
+
+        <div className={styles.statsRow}>
+          <article className={styles.statCard}>
+            <span>Total productos</span>
+            <strong>{productsState.length}</strong>
+          </article>
+          <article className={styles.statCard}>
+            <span>Con stock</span>
+            <strong>{productsState.filter((item) => Number(item.stock) > 0).length}</strong>
+          </article>
+          <article className={styles.statCard}>
+            <span>Sin stock</span>
+            <strong>{productsState.filter((item) => Number(item.stock) <= 0).length}</strong>
+          </article>
+        </div>
       </header>
 
       {isFormOpen ? (
@@ -83,14 +106,25 @@ function ProductList() {
         />
       ) : (
         <>
-          <div className={styles.toolbar}>
+          <div className={styles.toolbarPanel}>
+            <input
+              className={styles.searchInput}
+              placeholder="Buscar producto por nombre..."
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+
+            <p className={styles.resultsText}>
+              {filteredProducts.length} resultado{filteredProducts.length === 1 ? '' : 's'}
+            </p>
+
             <button className={styles.btnAdd} type="button" onClick={handleOpenCreate}>
               Agregar producto
             </button>
           </div>
 
           <div className={styles.grid}>
-            {productsState.map((product) => (
+            {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 name={product.name}
@@ -101,12 +135,15 @@ function ProductList() {
                 image={product.image}
                 description={product.description}
                 showDescription={false}
-                showLikeButton={false}
                 onDelete={() => handleDeleteProduct(product.id)}
                 onEdit={() => handleEditStart(product)}
               />
             ))}
           </div>
+
+          {filteredProducts.length === 0 ? (
+            <p className={styles.emptyNotice}>No hay productos que coincidan con tu búsqueda.</p>
+          ) : null}
         </>
       )}
     </div>

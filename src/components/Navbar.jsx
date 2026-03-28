@@ -1,19 +1,52 @@
 import styles from "../styles/Navbar.module.css";
 import { NavLink } from "react-router-dom";
  
-import logo from "../assets/react.svg";
- 
-function Navbar({ user, onSignIn, onSignOut }) {
-  const userLabel = user?.name ?? "Invitado";
+function Navbar({ user, onSignOut }) {
+  const userLabel = user?.name ?? "Sin sesion";
   const isLoggedIn = Boolean(user);
+  const isAdmin = user?.role === "admin";
  
   return (
     <nav className={styles.navbar}>
-      <div className={styles.brand}>
-        <img className={styles.logo} src={logo} alt="Logo" />
-        <span className={styles.brandName}>Sistema Ventas</span>
-      </div>
+      <div className={styles.topRow}>
+        <div className={styles.brand}>
+          <span className={styles.brandBadge}>NT</span>
+          <div className={styles.brandText}>
+            <strong className={styles.brandName}>NovaTech </strong>
+            <span className={styles.brandTagline}>Tecnologia para empresa y hogar</span>
+          </div>
+        </div>
  
+        <div className={styles.auth}>
+          <span className={styles.userName}>{userLabel}</span>
+
+          {isLoggedIn ? (
+            <button type="button" className={styles.authBtn} onClick={onSignOut}>
+              Cerrar sesion
+            </button>
+          ) : (
+            <>
+              <NavLink
+                to="/register"
+                className={({ isActive }) =>
+                  `${styles.authBtn} ${styles.secondaryAuthBtn} ${isActive ? styles.activeAuthBtn : ""}`
+                }
+              >
+                Crear cuenta
+              </NavLink>
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  `${styles.authBtn} ${isActive ? styles.activeAuthBtn : ""}`
+                }
+              >
+                Iniciar sesion
+              </NavLink>
+            </>
+          )}
+        </div>
+      </div>
+
       <div className={styles.links}>
         <NavLink
           to="/"
@@ -21,32 +54,30 @@ function Navbar({ user, onSignIn, onSignOut }) {
         >
           Inicio
         </NavLink>
-        <NavLink
-          to="/products"
-          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
-        >
-          Productos
-        </NavLink>
-        <NavLink
-          to="/cart"
-          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
-        >
-          Carrito
-        </NavLink>
-      </div>
- 
-      <div className={styles.auth}>
-        <span className={styles.userName}>{userLabel}</span>
- 
+        {isAdmin ? (
+          <NavLink
+            to="/products"
+            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
+          >
+            Gestion de productos
+          </NavLink>
+        ) : null}
+        {!isAdmin ? (
+          <NavLink
+            to="/cart"
+            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
+          >
+            Carrito
+          </NavLink>
+        ) : null}
         {isLoggedIn ? (
-          <button type="button" className={styles.authBtn} onClick={onSignOut}>
-            Sign out
-          </button>
-        ) : (
-          <button type="button" className={styles.authBtn} onClick={onSignIn}>
-            Sign in
-          </button>
-        )}
+          <NavLink
+            to="/my-account"
+            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
+          >
+            Mi cuenta
+          </NavLink>
+        ) : null}
       </div>
     </nav>
   );

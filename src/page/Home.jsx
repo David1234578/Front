@@ -53,16 +53,83 @@ function Home() {
       .map(([category, data]) => ({ category, product: data.product }));
   }, [productsState]);
 
+  const recentProducts = useMemo(
+    () =>
+      [...productsState]
+        .sort((a, b) => Number(b.id) - Number(a.id))
+        .slice(0, 4),
+    [productsState]
+  );
+
+  const firstCategory = categoryTiles[0]?.category ?? '';
+  const secondCategory = categoryTiles[1]?.category ?? firstCategory;
+  const topCategories = categoryTiles.slice(0, 8);
+
   return (
     <div className={homeStyles.container}>
-      <header className={homeStyles.header}>
-        <h1 className={homeStyles.title}>Inicio</h1>
-        <p className={homeStyles.subtitle}>Selecciona una categoría para ver sus productos</p>
-      </header>
+      <section className={homeStyles.hero}>
+        <div className={homeStyles.heroGlow} aria-hidden="true" />
+        <div className={homeStyles.heroMain}>
+          <div className={homeStyles.heroContent}>
+            <p className={homeStyles.heroKicker}>Modo gamer urbano</p>
+            <h1 className={homeStyles.heroTitle}>Arma tu setup con energia de tarima y calle</h1>
+            <p className={homeStyles.heroSubtitle}>
+              Encuentra tecnologia dura, accesorios pro y combos con actitud para subir de nivel tu juego y tu estilo.
+            </p>
+
+            <div className={homeStyles.heroActions}>
+              <button
+                type="button"
+                className={homeStyles.secondaryAction}
+                onClick={() => (secondCategory ? openCategory(secondCategory) : undefined)}
+              >
+                Entrar al mood gamer
+              </button>
+            </div>
+          </div>
+
+          <div className={homeStyles.heroPanel}>
+            <h2 className={homeStyles.panelTitle}>Por que este parche esta encendido</h2>
+            <ul className={homeStyles.panelList}>
+              <li>Productos con enfoque gaming y performance real</li>
+              <li>Compra rapida sin vueltas raras</li>
+              <li>Diseño con vibra urbana de Medellin</li>
+            </ul>
+
+            <div className={homeStyles.heroStats}>
+              <article className={homeStyles.statItem}>
+                <strong>{productsState.length}+</strong>
+                <span>Productos</span>
+              </article>
+              <article className={homeStyles.statItem}>
+                <strong>{categoryTiles.length}</strong>
+                <span>Categorías</span>
+              </article>
+              <article className={homeStyles.statItem}>
+                <strong>100%</strong>
+                <span>En línea</span>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div className={homeStyles.quickCategories}>
+          {topCategories.map(({ category }) => (
+            <button
+              key={category}
+              type="button"
+              className={homeStyles.categoryPill}
+              onClick={() => openCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className={homeStyles.searchSection} aria-label="Buscador de productos">
         <label htmlFor="home-product-search" className={homeStyles.searchLabel}>
-          Buscar por nombre
+          Busca por nombre
         </label>
         <input
           id="home-product-search"
@@ -85,7 +152,7 @@ function Home() {
 
                     <div className={homeStyles.searchInfo}>
                       <p className={homeStyles.searchName}>{product.name}</p>
-                      <p className={homeStyles.searchMeta}>Categoria: {product.category}</p>
+                      <p className={homeStyles.searchMeta}>Categoría: {product.category}</p>
                     </div>
 
                     <button
@@ -93,7 +160,7 @@ function Home() {
                       className={homeStyles.searchAction}
                       onClick={() => openCategory(product.category)}
                     >
-                      Ver categoria
+                      Ver categoría
                     </button>
                   </li>
                 ))}
@@ -103,7 +170,38 @@ function Home() {
         ) : null}
       </section>
 
-      <div className={homeStyles.categoryGrid}>
+      <section className={homeStyles.recentSection} aria-label="Productos recientes">
+        <div className={homeStyles.sectionHeader}>
+          <h2 className={homeStyles.sectionTitle}>Novedades del catálogo</h2>
+          <button
+            type="button"
+            className={homeStyles.viewAll}
+            onClick={() => (firstCategory ? openCategory(firstCategory) : undefined)}
+          >
+            Ver todos
+          </button>
+        </div>
+
+        <div className={homeStyles.recentGrid}>
+          {recentProducts.map((product) => (
+            <article key={product.id} className={homeStyles.recentCard}>
+              <img className={homeStyles.recentImage} src={product.image} alt={product.name} />
+              <div className={homeStyles.recentBody}>
+                <p className={homeStyles.recentCategory}>{product.category}</p>
+                <h3 className={homeStyles.recentName}>{product.name}</h3>
+                <p className={homeStyles.recentPrice}>${Number(product.price).toLocaleString('es-CO')}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={homeStyles.categoriesSection} aria-label="Categorias principales">
+        <div className={homeStyles.sectionHeader}>
+          <h2 className={homeStyles.sectionTitle}>Categorías</h2>
+        </div>
+
+        <div className={homeStyles.categoryGrid}>
         {categoryTiles.map(({ category, product }) => (
           <button
             key={category}
@@ -118,7 +216,8 @@ function Home() {
             </div>
           </button>
         ))}
-      </div>
+        </div>
+      </section>
     </div>
   );
 }

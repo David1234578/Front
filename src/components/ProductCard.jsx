@@ -1,14 +1,21 @@
-import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
-   
-  function ProductCard({name, price, stock, description,rating, image, category, onEdit, onDelete, onDetails, onAddToCart, showDescription = true, showLikeButton = true})
-    { const [likes, setLikes] = useState(0);
-        const [isLiked, setIsLiked] = useState(false);
-        const handleLike = () => {
-            if (isLiked) { setLikes(likes - 1);
-                setIsLiked(false);
-            } else { setLikes(likes + 1); setIsLiked(true); } };
- 
+
+function ProductCard({
+  name,
+  price,
+  stock,
+  description,
+  rating,
+  image,
+  category,
+  onEdit,
+  onDelete,
+  onDetails,
+  onAddToCart,
+  showDescription = true,
+}) {
+  const numericPrice = Number(price);
+
     return (
         <article className={styles.productCard}>
             <img src={image} alt={name} className={styles.productImage} />
@@ -23,15 +30,15 @@ import styles from '../styles/ProductCard.module.css';
                 {showDescription ? <p className={styles.productDescription}>{description}</p> : null}
                 <p className={styles.productStock}>Stock: {stock}</p>
                 <div className={styles.productFooter}>
-                    <span className={styles.productPrice}>${price.toFixed(2)}</span>
-                  {showLikeButton ? (
-                    <button
-                      className={`${styles.btnLike} ${isLiked ? styles.liked : ''}`}
-                      onClick={handleLike}
-                    >
-                      {isLiked ? '❤️' : '🤍'} {likes} Me gusta
-                    </button>
-                  ) : null}
+                    <span className={styles.productPrice}>
+                      {Number.isFinite(numericPrice)
+                        ? numericPrice.toLocaleString('es-CO', {
+                            style: 'currency',
+                            currency: 'COP',
+                            maximumFractionDigits: 0,
+                          })
+                        : 'COP 0'}
+                    </span>
                 </div>
                 {onDetails || onEdit || onDelete || onAddToCart ? (
           <div className={styles.cardActions}>
@@ -64,6 +71,6 @@ import styles from '../styles/ProductCard.module.css';
     </article>
   );
 }
- 
+
 export default ProductCard;
 

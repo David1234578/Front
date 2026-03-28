@@ -1,7 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&family=Teko:wght@500;600;700&display=swap');
 
 :root {
-  font-family: "Manrope", "Segoe UI", Tahoma, sans-serif;
+  font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -9,25 +9,29 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --bg: #0f172a;
-  --bg-soft: #111c33;
-  --surface: #ffffff;
-  --surface-glass: rgba(255, 255, 255, 0.08);
-  --text: #0f172a;
-  --text-soft: #334155;
-  --text-invert: #f8fafc;
-  --primary: #06b6d4;
-  --primary-dark: #0891b2;
-  --accent: #f97316;
+  --bg: #050d1a;
+  --bg-soft: #0b1628;
+  --surface: #0d1b31;
+  --surface-glass: rgba(15, 30, 50, 0.78);
+  --text: #e7f0ff;
+  --text-soft: #9fb4d1;
+  --text-invert: #ffffff;
+  --primary: #00e0ff;
+  --primary-dark: #00a8e8;
+  --accent: #39ff14;
+  --accent-strong: #29cc10;
   --danger: #ef4444;
-  --success: #22c55e;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-500: #64748b;
-  --gray-700: #334155;
-  --gray-900: #0f172a;
-  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
-  --shadow-strong: 0 20px 45px rgba(15, 23, 42, 0.2);
+  --success: #16a34a;
+  --gray-100: #1d2f4a;
+  --gray-200: #294262;
+  --gray-500: #8fa8c7;
+  --gray-700: #c3d3ea;
+  --gray-900: #f0f6ff;
+  --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.34);
+  --shadow-strong: 0 24px 44px rgba(0, 0, 0, 0.48);
+  --tempo-fast: 1.05s;
+  --tempo-mid: 2.8s;
+  --tempo-slow: 6.4s;
 }
 
 * {
@@ -38,8 +42,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: var(--text-invert);
-  background: radial-gradient(circle at top, #1e293b 0%, #0f172a 55%, #0b1120 100%);
+  color: var(--text);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(57, 255, 20, 0.14), transparent 34%),
+    radial-gradient(circle at 100% 10%, rgba(0, 224, 255, 0.14), transparent 38%),
+    linear-gradient(180deg, #040b16 0%, #081225 55%, #0b1628 100%);
 }
 
 img {
@@ -60,6 +67,6 @@ select {
 }
 
 ::selection {
-  background: rgba(6, 182, 212, 0.35);
+  background: rgba(0, 224, 255, 0.28);
 }
  

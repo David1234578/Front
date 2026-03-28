@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 import AppModal from '../components/AppModal';
 import styles from '../styles/Checkout.module.css';
@@ -77,29 +77,25 @@ function Checkout() {
   };
 
   if (items.length === 0 && !isSuccessOpen) {
-    return (
-      <section className={styles.page}>
-        <div className={styles.emptyCard}>
-          <h1 className={styles.title}>Checkout</h1>
-          <p className={styles.subtitle}>No tienes productos para pagar en este momento.</p>
-          <button type="button" className={styles.primaryBtn} onClick={() => navigate('/products')}>
-            Ir a productos
-          </button>
-        </div>
-      </section>
-    );
+    return <Navigate to="/cart" replace />;
   }
 
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Finalizar compra</h1>
-        <p className={styles.subtitle}>Completa tus datos para procesar el pedido.</p>
+        <p className={styles.subtitle}>Completa la informacion para confirmar el pedido.</p>
+
+        <div className={styles.stepsRow}>
+          <span className={styles.stepItem}>1. Datos</span>
+          <span className={styles.stepItem}>2. Pago</span>
+          <span className={styles.stepItem}>3. Confirmacion</span>
+        </div>
       </header>
 
       <div className={styles.layout}>
         <form className={styles.formCard} onSubmit={handleSubmit}>
-          <h2 className={styles.sectionTitle}>Datos de entrega</h2>
+          <h2 className={styles.sectionTitle}>Informacion de contacto</h2>
 
           <div className={styles.gridTwo}>
             <label className={styles.field}>
@@ -154,6 +150,8 @@ function Checkout() {
             </label>
           </div>
 
+          <h3 className={styles.subSectionTitle}>Direccion de entrega</h3>
+
           <label className={styles.field}>
             <span>Direccion</span>
             <input
@@ -165,6 +163,8 @@ function Checkout() {
               required
             />
           </label>
+
+          <h3 className={styles.subSectionTitle}>Metodo de pago</h3>
 
           <fieldset className={styles.paymentMethods}>
             <legend className={styles.paymentTitle}>Metodo de pago</legend>
@@ -209,9 +209,21 @@ function Checkout() {
         </form>
 
         <aside className={styles.summaryCard}>
-          <h2 className={styles.sectionTitle}>Resumen de pago</h2>
+          <h2 className={styles.sectionTitle}>Resumen de orden</h2>
           <p className={styles.meta}>{totals.units} unidades</p>
           <p className={styles.methodTag}>Metodo: {getPaymentMethodLabel(values.paymentMethod)}</p>
+
+          <div className={styles.itemsPreview}>
+            {items.map((item) => (
+              <article key={item.id} className={styles.previewItem}>
+                <img className={styles.previewImage} src={item.image} alt={item.name} />
+                <div className={styles.previewInfo}>
+                  <p className={styles.previewName}>{item.name}</p>
+                  <p className={styles.previewMeta}>x{item.quantity} · {formatCOP(item.price)}</p>
+                </div>
+              </article>
+            ))}
+          </div>
 
           <div className={styles.summaryRows}>
             <div className={styles.summaryRow}>
