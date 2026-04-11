@@ -1,25 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useInRouterContext } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
-import Cart from './page/Cart';
-import CategoryProducts from './page/CategoryProducts';
-import Checkout from './page/Checkout';
-import Home from './page/Home';
-import Login from './page/Login';
-import MyAccount from './page/MyAccount';
-import ProductList from './page/ProductList';
-import Register from './page/Register';
-import RecoverPassword from './page/RecoverPassword';
-import { clearSession, loadSession } from './utils/authStorage';
-
+import useAuth from './hooks/useAuth';
+import Cart from './pages/Cart';
+import CategoryProducts from './pages/CategoryProducts';
+import Checkout from './pages/Checkout';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import OrderDetail from './pages/OrderDetail';
+import ProductList from './pages/ProductList';
+import Register from './pages/Register';
+import RecoverPassword from './pages/RecoverPassword';
+import UserOrders from './pages/UserOrders';
+import UserProfile from './pages/UserProfile';
 
 import './App.css';
 
-function AppContent() {
-  const [user, setUser] = useState(() => loadSession());
+function App() {
+  const { currentUser } = useAuth();
   const [cartNotice, setCartNotice] = useState('');
   const cartToastTimeoutRef = useRef(null);
 
@@ -58,58 +59,32 @@ function AppContent() {
     };
   }, []);
 
-  const handleSignOut = () => {
-    setUser(clearSession());
-  };
-
-  const handleLoginSuccess = (session) => {
-    setUser(session);
-  };
-
-  const handleProfileUpdated = (session) => {
-    setUser(session);
-  };
-
-  const handleRegisterSuccess = (session) => {
-    setUser(session);
-  };
-
   return (
     <div className="app">
-      <Header
-        user={user}
-        onSignOut={handleSignOut}
-      />
+      <Header user={currentUser} />
 
       <main className="main">
         <Routes>
           <Route
             path="/login"
             element={
-              user ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
+              currentUser ? <Navigate to="/" replace /> : <Login />
             }
           />
           <Route
             path="/recover-password"
-            element={user ? <Navigate to="/" replace /> : <RecoverPassword />}
+            element={currentUser ? <Navigate to="/" replace /> : <RecoverPassword />}
           />
           <Route
             path="/register"
-            element={user ? <Navigate to="/" replace /> : <Register onRegisterSuccess={handleRegisterSuccess} />}
+            element={currentUser ? <Navigate to="/" replace /> : <Register />}
           />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute user={user}>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/" element={<Home />} />
           <Route
             path="/cart"
             element={
-              <ProtectedRoute user={user} requiredRole="user">
+              <ProtectedRoute requiredRole="user">
                 <Cart />
               </ProtectedRoute>
             }
@@ -117,32 +92,46 @@ function AppContent() {
           <Route
             path="/checkout"
             element={
-              <ProtectedRoute user={user} requiredRole="user">
+              <ProtectedRoute requiredRole="user">
                 <Checkout />
               </ProtectedRoute>
             }
           />
+          <Route path="/category/:categoryName" element={<CategoryProducts user={currentUser} />} />
+
           <Route
-            path="/category/:categoryName"
+            path="/user/profile"
             element={
-              <ProtectedRoute user={user}>
-                <CategoryProducts user={user} />
+              <ProtectedRoute>
+                <UserProfile />
               </ProtectedRoute>
             }
           />
+
           <Route
-            path="/my-account"
+            path="/user/orders"
             element={
-              <ProtectedRoute user={user}>
-                <MyAccount user={user} onProfileUpdated={handleProfileUpdated} />
+              <ProtectedRoute>
+                <UserOrders />
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/user/orders/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/my-account" element={<Navigate to="/user/profile" replace />} />
           <Route
             path="/products"
             element={
-              <ProtectedRoute user={user} requiredRole="admin">
-                <ProductList user={user} />
+              <ProtectedRoute requiredRole="admin">
+                <ProductList user={currentUser} />
               </ProtectedRoute>
             }
           />
@@ -158,20 +147,6 @@ function AppContent() {
 
       <Footer />
     </div>
-  );
-}
-
-function App() {
-  const hasRouterContext = useInRouterContext();
-
-  if (hasRouterContext) {
-    return <AppContent />;
-  }
-
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
   );
 }
 

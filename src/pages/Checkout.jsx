@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import AppModal from '../components/AppModal';
+import useAuth from '../hooks/useAuth';
 import styles from '../styles/Checkout.module.css';
 import { clearCart, loadCart } from '../utils/cartStorage';
+import { saveOrder } from '../utils/ordersStorage';
 
 const copCurrencyFormatter = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -38,10 +40,12 @@ const getPaymentMethodLabel = (value) => {
 };
 
 function Checkout() {
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState(loadCart);
   const [values, setValues] = useState(emptyValues);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [latestOrderId, setLatestOrderId] = useState('');
 
   const totals = useMemo(() => {
     const units = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -66,6 +70,21 @@ function Checkout() {
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    const nextOrder = {
+      id: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      userId: currentUser?.id,
+      createdAt: new Date().toISOString(),
+      paymentMethod: getPaymentMethodLabel(values.paymentMethod),
+      shippingAddress: values.address,
+      city: values.city,
+      notes: values.notes,
+      items,
+      totals,
+    };
+
+    saveOrder(nextOrder);
+    setLatestOrderId(nextOrder.id);
+
     // Flujo solicitado: pago siempre exitoso al enviar.
     setItems(clearCart());
     setIsSuccessOpen(true);
@@ -73,7 +92,12 @@ function Checkout() {
 
   const handleCloseSuccess = () => {
     setIsSuccessOpen(false);
-    navigate('/');
+    if (latestOrderId) {
+      navigate(`/user/orders/${encodeURIComponent(latestOrderId)}`);
+      return;
+    }
+
+    navigate('/user/orders');
   };
 
   if (items.length === 0 && !isSuccessOpen) {

@@ -1,0 +1,102 @@
+.container {
+  width: min(100%, 1020px);
+  margin: 0 auto;
+  padding: 1.2rem 1rem;
+}
+
+.card {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  border-radius: 16px;
+  border: 1px solid #274565;
+  background: linear-gradient(155deg, #0a1a30, #122440);
+  box-shadow: var(--shadow-soft);
+  padding: 1.2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #7df9ff;
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.title {
+  margin: 0.35rem 0 0;
+  color: #f3f8ff;
+  font-family: 'Teko', 'Montserrat', sans-serif;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+}
+
+.subtitle {
+  margin: 0.5rem 0 0;
+  color: #9eb5d2;
+}
+
+.form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.82rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.label {
+  color: #bfd2ea;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.input {
+  border: 1px solid #2e5177;
+  border-radius: 10px;
+  background: #10253f;
+  color: #e7f1ff;
+  padding: 0.62rem 0.78rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #00e0ff;
+  box-shadow: 0 0 0 3px rgba(0, 224, 255, 0.16);
+}
+
+.error {
+  margin: 0;
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.25);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 10px;
+  padding: 0.56rem 0.62rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.primaryButton {
+  border: none;
+  border-radius: 10px;
+  padding: 0.66rem 0.96rem;
+  background: linear-gradient(120deg, #39ff14, #00e0ff);
+  color: #001226;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.helperText {
+  margin: 0.9rem 0 0;
+  color: #9eb5d2;
+}
+
+.helperText a {
+  color: #7df9ff;
+  font-weight: 700;
+}
+
+.helperText a:hover {
+  text-decoration: underline;
+}

@@ -1,6 +1,9 @@
 const USERS_STORAGE_KEY = 'users';
 const SESSION_STORAGE_KEY = 'session';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^\+?[0-9]{7,15}$/;
+
 const defaultUsers = [
   {
     id: 1,
@@ -23,6 +26,51 @@ const defaultUsers = [
 ];
 
 const toSafeString = (value) => String(value ?? '').trim();
+
+const isValidEmail = (email) => EMAIL_PATTERN.test(toSafeString(email).toLowerCase());
+
+const validateName = (name) => {
+  const value = toSafeString(name);
+
+  if (!value) {
+    return { ok: false, message: 'El nombre es obligatorio.' };
+  }
+
+  if (value.length < 3) {
+    return { ok: false, message: 'El nombre debe tener al menos 3 caracteres.' };
+  }
+
+  return { ok: true, value };
+};
+
+const validatePhone = (phone) => {
+  const value = toSafeString(phone);
+
+  if (!value) {
+    return { ok: true, value: '' };
+  }
+
+  const normalized = value.replace(/[\s()-]/g, '');
+  if (!PHONE_PATTERN.test(normalized)) {
+    return { ok: false, message: 'El telefono debe tener entre 7 y 15 digitos.' };
+  }
+
+  return { ok: true, value: normalized };
+};
+
+const validateCity = (city) => {
+  const value = toSafeString(city);
+
+  if (!value) {
+    return { ok: true, value: '' };
+  }
+
+  if (value.length < 2) {
+    return { ok: false, message: 'La ciudad debe tener al menos 2 caracteres.' };
+  }
+
+  return { ok: true, value };
+};
 
 const normalizeUser = (user) => ({
   id: Number(user?.id) || Date.now(),
@@ -69,6 +117,35 @@ const validatePasswordStrength = (password) => {
 
   return { ok: true, message: '' };
 };
+
+const validateEmailInput = (email) => {
+  const value = toSafeString(email).toLowerCase();
+
+  if (!value) {
+    return { ok: false, message: 'Debes ingresar un correo.' };
+  }
+
+  if (!isValidEmail(value)) {
+    return { ok: false, message: 'Ingresa un correo valido.' };
+  }
+
+  return { ok: true, value };
+};
+
+const buildResponse = ({ ok, status, message = '', error = '', data = {}, ...extra }) => ({
+  ok,
+  status,
+  message,
+  error,
+  data,
+  ...extra,
+});
+
+const buildSuccess = ({ status, message, data = {}, ...extra }) =>
+  buildResponse({ ok: true, status, message, data, ...extra });
+
+const buildError = ({ status, message, data = {}, ...extra }) =>
+  buildResponse({ ok: false, status, message, error: message, data, ...extra });
 
 const persistUsers = (users) => {
   if (!withWindow()) return users;
@@ -142,12 +219,18 @@ export function clearSession() {
 }
 
 export function authenticateUser(email, password) {
-  const cleanEmail = toSafeString(email).toLowerCase();
+  const emailValidation = validateEmailInput(email);
   const cleanPassword = String(password ?? '').trim();
 
-  if (!cleanEmail || !cleanPassword) {
-    return { ok: false, message: 'Debes ingresar correo y clave.' };
+  if (!emailValidation.ok) {
+    return buildError({ status: 400, message: emailValidation.message });
   }
+
+  if (!cleanPassword) {
+    return buildError({ status: 400, message: 'Debes ingresar correo y clave.' });
+  }
+
+  const cleanEmail = emailValidation.value;
 
   const users = loadUsers();
   const found = users.find(
@@ -155,112 +238,144 @@ export function authenticateUser(email, password) {
   );
 
   if (!found) {
-    return { ok: false, message: 'Correo o clave incorrectos.' };
+    return buildError({ status: 401, message: 'Correo o clave incorrectos.' });
   }
 
-  return { ok: true, user: saveSession(found) };
+  const user = saveSession(found);
+
+  return buildSuccess({
+    status: 200,
+    message: 'Inicio de sesion correcto.',
+    user,
+    data: { user },
+  });
 }
 
 export function registerUser(payload) {
-  const name = toSafeString(payload?.name);
-  const email = toSafeString(payload?.email).toLowerCase();
-  const city = toSafeString(payload?.city);
-  const phone = toSafeString(payload?.phone);
+  const nameValidation = validateName(payload?.name);
+  const emailValidation = validateEmailInput(payload?.email);
+  const cityValidation = validateCity(payload?.city);
+  const phoneValidation = validatePhone(payload?.phone);
   const password = String(payload?.password ?? '').trim();
 
-  if (!name || !email || !password) {
-    return { ok: false, message: 'Nombre, correo y clave son obligatorios.' };
+  if (!nameValidation.ok) {
+    return buildError({ status: 400, message: nameValidation.message });
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailPattern.test(email)) {
-    return { ok: false, message: 'Ingresa un correo valido.' };
+  if (!emailValidation.ok) {
+    return buildError({ status: 400, message: emailValidation.message });
+  }
+
+  if (!cityValidation.ok) {
+    return buildError({ status: 400, message: cityValidation.message });
+  }
+
+  if (!phoneValidation.ok) {
+    return buildError({ status: 400, message: phoneValidation.message });
+  }
+
+  if (!password) {
+    return buildError({ status: 400, message: 'La clave es obligatoria.' });
   }
 
   const passwordValidation = validatePasswordStrength(password);
   if (!passwordValidation.ok) {
-    return { ok: false, message: passwordValidation.message };
+    return buildError({ status: 400, message: passwordValidation.message });
   }
 
   const users = loadUsers();
+  const email = emailValidation.value;
   const exists = users.some((user) => user.email === email);
 
   if (exists) {
-    return { ok: false, message: 'Ese correo ya esta registrado.' };
+    return buildError({ status: 409, message: 'Ese correo ya esta registrado.' });
   }
 
   const nextId = users.reduce((acc, user) => Math.max(acc, Number(user.id) || 0), 0) + 1;
 
   const createdUser = normalizeUser({
     id: nextId,
-    name,
+    name: nameValidation.value,
     email,
     password,
-    city,
-    phone,
+    city: cityValidation.value,
+    phone: phoneValidation.value,
     role: 'user',
   });
 
   persistUsers([...users, createdUser]);
 
-  return {
-    ok: true,
-    user: saveSession(createdUser),
-  };
+  const user = saveSession(createdUser);
+
+  return buildSuccess({
+    status: 201,
+    message: 'Usuario creado correctamente.',
+    user,
+    data: { user },
+  });
 }
 
 export function recoverPasswordByEmail(email) {
-  const cleanEmail = toSafeString(email).toLowerCase();
-  if (!cleanEmail) {
-    return { ok: false, message: 'Debes ingresar un correo.' };
+  const emailValidation = validateEmailInput(email);
+  if (!emailValidation.ok) {
+    return buildError({ status: 400, message: emailValidation.message });
   }
 
   const users = loadUsers();
-  const found = users.find((user) => user.email === cleanEmail);
+  const found = users.find((user) => user.email === emailValidation.value);
 
   if (!found) {
-    return { ok: false, message: 'No encontramos una cuenta con ese correo.' };
+    return buildError({ status: 404, message: 'No encontramos una cuenta con ese correo.' });
   }
 
-  return {
-    ok: true,
-    message: `Tu clave actual es: ${found.password}`,
-  };
+  return buildSuccess({
+    status: 200,
+    message: 'Si el correo existe, enviaremos las instrucciones de recuperacion.',
+    data: { email: emailValidation.value },
+  });
 }
 
 export function updateCurrentUserProfile(payload) {
   const current = loadSession();
   if (!current) {
-    return { ok: false, message: 'No hay sesion activa.' };
+    return buildError({ status: 401, message: 'No hay sesion activa.' });
   }
 
   const users = loadUsers();
   const index = users.findIndex((user) => user.id === current.id);
   if (index === -1) {
-    return { ok: false, message: 'No se encontro el usuario actual.' };
+    return buildError({ status: 404, message: 'No se encontro el usuario actual.' });
   }
 
-  const name = toSafeString(payload?.name);
-  const city = toSafeString(payload?.city);
-  const phone = toSafeString(payload?.phone);
+  const nameValidation = validateName(payload?.name);
+  const cityValidation = validateCity(payload?.city);
+  const phoneValidation = validatePhone(payload?.phone);
   const password = String(payload?.password ?? '').trim();
 
-  if (!name) {
-    return { ok: false, message: 'El nombre es obligatorio.' };
+  if (!nameValidation.ok) {
+    return buildError({ status: 400, message: nameValidation.message });
+  }
+
+  if (!cityValidation.ok) {
+    return buildError({ status: 400, message: cityValidation.message });
+  }
+
+  if (!phoneValidation.ok) {
+    return buildError({ status: 400, message: phoneValidation.message });
   }
 
   if (password) {
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.ok) {
-      return { ok: false, message: passwordValidation.message };
+      return buildError({ status: 400, message: passwordValidation.message });
     }
   }
 
   const updatedUser = {
     ...users[index],
-    name,
-    city,
-    phone,
+    name: nameValidation.value,
+    city: cityValidation.value,
+    phone: phoneValidation.value,
     password: password || users[index].password,
   };
 
@@ -268,10 +383,14 @@ export function updateCurrentUserProfile(payload) {
   nextUsers[index] = normalizeUser(updatedUser);
   persistUsers(nextUsers);
 
-  return {
-    ok: true,
-    user: saveSession(nextUsers[index]),
-  };
+  const user = saveSession(nextUsers[index]);
+
+  return buildSuccess({
+    status: 200,
+    message: 'Perfil actualizado correctamente.',
+    user,
+    data: { user },
+  });
 }
 
 export const AUTH_SESSION_KEY = SESSION_STORAGE_KEY;

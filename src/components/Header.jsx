@@ -2,13 +2,10 @@ import styles from "../styles/Header.module.css";
  
 import Navbar from "./Navbar";
  
-function Header({ user, onSignOut }) {
+function Header({ user }) {
   return (
     <header className={styles.header}>
-      <Navbar
-        user={user}
-        onSignOut={onSignOut}
-      />
+      <Navbar user={user} />
     </header>
   );
 }

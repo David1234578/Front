@@ -1,10 +1,16 @@
 import styles from "../styles/Navbar.module.css";
 import { NavLink } from "react-router-dom";
+import useAuth from '../hooks/useAuth';
  
-function Navbar({ user, onSignOut }) {
+function Navbar({ user }) {
+  const { logout } = useAuth();
   const userLabel = user?.name ?? "Sin sesion";
   const isLoggedIn = Boolean(user);
   const isAdmin = user?.role === "admin";
+
+  const handleSignOut = () => {
+    logout();
+  };
  
   return (
     <nav className={styles.navbar}>
@@ -21,7 +27,7 @@ function Navbar({ user, onSignOut }) {
           <span className={styles.userName}>{userLabel}</span>
 
           {isLoggedIn ? (
-            <button type="button" className={styles.authBtn} onClick={onSignOut}>
+            <button type="button" className={styles.authBtn} onClick={handleSignOut}>
               Cerrar sesion
             </button>
           ) : (
@@ -72,10 +78,18 @@ function Navbar({ user, onSignOut }) {
         ) : null}
         {isLoggedIn ? (
           <NavLink
-            to="/my-account"
+            to="/user/profile"
             className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
           >
             Mi cuenta
+          </NavLink>
+        ) : null}
+        {isLoggedIn ? (
+          <NavLink
+            to="/user/orders"
+            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
+          >
+            Mis pedidos
           </NavLink>
         ) : null}
       </div>
