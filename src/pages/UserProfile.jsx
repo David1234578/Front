@@ -1,22 +1,25 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import useAuth from '../hooks/useAuth';
 import styles from '../styles/UserProfile.module.css';
 import { formatCOP } from '../utils/formatCOP';
-import { loadOrders } from '../utils/ordersStorage';
+import { loadOrdersByUserId } from '../utils/ordersStorage';
 
-function UserProfile({ user }) {
+function UserProfile() {
   const navigate = useNavigate();
-  const orders = useMemo(() => loadOrders(), []);
+  const { currentUser } = useAuth();
+  const orders = useMemo(() => loadOrdersByUserId(currentUser?.id), [currentUser?.id]);
   const latestOrder = orders[0] ?? null;
 
   const profile = {
-    name: user?.name || latestOrder?.customer?.fullName || 'Invitado',
-    email: user?.email || latestOrder?.customer?.email || 'Sin correo registrado',
-    phone: user?.phone || latestOrder?.customer?.phone || 'Sin telefono registrado',
-    address: user?.address || latestOrder?.customer?.address || 'Aun no hay direccion registrada',
-    city: user?.city || latestOrder?.customer?.city || 'Sin ciudad registrada',
-    postalCode: user?.postalCode || latestOrder?.customer?.postalCode || '---',
+    name: currentUser?.name || 'Invitado',
+    email: currentUser?.email || 'Sin correo registrado',
+    phone: currentUser?.phone || latestOrder?.customer?.phone || 'Sin telefono registrado',
+    address:
+      currentUser?.address || latestOrder?.customer?.address || 'Aun no hay direccion registrada',
+    city: currentUser?.city || latestOrder?.customer?.city || 'Sin ciudad registrada',
+    postalCode: currentUser?.postalCode || latestOrder?.customer?.postalCode || '---',
   };
 
   const stats = {
@@ -29,11 +32,11 @@ function UserProfile({ user }) {
     <section className={styles.container}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Semana 10</p>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Mi cuenta</h1>
           <p className={styles.subtitle}>
-            Esta vista centraliza el perfil mock del cliente y un resumen rapido de sus compras
-            recientes.
+            Esta vista centraliza la sesión autenticada y un resumen rápido de las órdenes del
+            usuario actual.
           </p>
         </div>
 

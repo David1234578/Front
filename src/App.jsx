@@ -3,13 +3,17 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
+import ProtectedRoute from './components/ProtectedRoute';
+import useAuth from './hooks/useAuth';
 import Cart from './pages/Cart';
 import CategoryProducts from './pages/CategoryProducts';
 import Checkout from './pages/Checkout';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import OrderConfirmation from './pages/OrderConfirmation';
 import OrderDetail from './pages/OrderDetail';
 import ProductList from './pages/ProductList';
+import Register from './pages/Register';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
 import {
@@ -18,29 +22,12 @@ import {
   getShippingOptionById,
 } from './utils/calculateOrderTotals';
 import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
-import { loadOrders, saveOrder } from './utils/ordersStorage';
+import { saveOrder } from './utils/ordersStorage';
 
 import './App.css';
 
-function getInitialUser() {
-  const latestOrder = loadOrders()[0];
-
-  if (!latestOrder?.customer?.fullName?.trim()) {
-    return null;
-  }
-
-  return {
-    name: latestOrder.customer.fullName,
-    email: latestOrder.customer.email,
-    phone: latestOrder.customer.phone,
-    address: latestOrder.customer.address,
-    city: latestOrder.customer.city,
-    postalCode: latestOrder.customer.postalCode,
-  };
-}
-
 function App() {
-  const [user, setUser] = useState(getInitialUser);
+  const { currentUser } = useAuth();
   const [cartItems, setCartItems] = useState(loadCartItems);
   const [latestOrder, setLatestOrder] = useState(null);
 
@@ -124,6 +111,7 @@ function App() {
     const totals = calculateOrderTotals(cartItems, shippingMethodId);
     const order = {
       id: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      userId: currentUser?.id ?? '',
       createdAt: new Date().toISOString(),
       items: cartItems.map((item) => ({ ...item })),
       customer,
@@ -134,14 +122,6 @@ function App() {
 
     saveOrder(order);
     setLatestOrder(order);
-    setUser({
-      name: customer.fullName,
-      email: customer.email,
-      phone: customer.phone,
-      address: customer.address,
-      city: customer.city,
-      postalCode: customer.postalCode,
-    });
     setCartItems([]);
     return order;
   };
@@ -155,26 +135,15 @@ function App() {
     [cartItems]
   );
 
-  const handleSignIn = () => {
-    setUser({ name: 'Usuario' });
-  };
-
-  const handleSignOut = () => {
-    setUser(null);
-  };
-
   return (
     <div className="app">
-      <Header
-        user={user}
-        onSignIn={handleSignIn}
-        onSignOut={handleSignOut}
-        cartItemCount={cartItemCount}
-      />
+      <Header user={currentUser} cartItemCount={cartItemCount} />
 
       <main className="main">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route
             path="/category/:categoryName"
             element={<CategoryProducts cartItems={cartItems} onAddToCart={handleAddToCart} />}
@@ -194,11 +163,13 @@ function App() {
           <Route
             path="/checkout"
             element={
-              <Checkout
-                cartItems={cartItems}
-                user={user}
-                onCompleteCheckout={handleCompleteCheckout}
-              />
+              <ProtectedRoute>
+                <Checkout
+                  cartItems={cartItems}
+                  user={currentUser}
+                  onCompleteCheckout={handleCompleteCheckout}
+                />
+              </ProtectedRoute>
             }
           />
           <Route
@@ -207,9 +178,30 @@ function App() {
               <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />
             }
           />
-          <Route path="/user/profile" element={<UserProfile user={user} />} />
-          <Route path="/user/orders" element={<UserOrders />} />
-          <Route path="/user/orders/:orderId" element={<OrderDetail />} />
+          <Route
+            path="/user/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/orders"
+            element={
+              <ProtectedRoute>
+                <UserOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/orders/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

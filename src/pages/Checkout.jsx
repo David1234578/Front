@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import styles from '../styles/Checkout.module.css';
@@ -14,16 +14,28 @@ const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/;
 function Checkout({ cartItems, user, onCompleteCheckout }) {
   const [values, setValues] = useState({
     fullName: user?.name ?? '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+    address: user?.address ?? '',
+    city: user?.city ?? '',
+    postalCode: user?.postalCode ?? '',
     shippingMethod: SHIPPING_OPTIONS[0].id,
     paymentMethod: PAYMENT_METHODS[0].id,
   });
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setValues((currentValues) => ({
+      ...currentValues,
+      fullName: user?.name ?? currentValues.fullName,
+      email: user?.email ?? currentValues.email,
+      phone: user?.phone ?? currentValues.phone,
+      address: user?.address ?? currentValues.address,
+      city: user?.city ?? currentValues.city,
+      postalCode: user?.postalCode ?? currentValues.postalCode,
+    }));
+  }, [user]);
 
   const totals = useMemo(
     () => calculateOrderTotals(cartItems, values.shippingMethod),

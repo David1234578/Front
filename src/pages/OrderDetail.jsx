@@ -1,27 +1,30 @@
 import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import useAuth from '../hooks/useAuth';
 import styles from '../styles/OrderDetail.module.css';
 import { formatCOP } from '../utils/formatCOP';
-import { loadOrders } from '../utils/ordersStorage';
+import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function OrderDetail() {
   const navigate = useNavigate();
   const { orderId } = useParams();
+  const { currentUser } = useAuth();
 
   const order = useMemo(
-    () => loadOrders().find((savedOrder) => savedOrder.id === orderId) ?? null,
-    [orderId]
+    () =>
+      loadOrdersByUserId(currentUser?.id).find((savedOrder) => savedOrder.id === orderId) ?? null,
+    [currentUser?.id, orderId]
   );
 
   if (!order) {
     return (
       <section className={styles.container}>
         <div className={styles.emptyState}>
-          <p className={styles.eyebrow}>Semana 10</p>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Orden no encontrada</h1>
           <p className={styles.subtitle}>
-            El identificador solicitado no existe en el historial persistido o ya no esta disponible
+            El identificador solicitado no pertenece al usuario autenticado o ya no está disponible
             en este navegador.
           </p>
           <div className={styles.actions}>
@@ -50,7 +53,7 @@ function OrderDetail() {
     <section className={styles.container}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Semana 10</p>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Detalle de orden</h1>
           <p className={styles.subtitle}>
             Consulta el pedido completo, con los datos del cliente, envio, pago y totales.

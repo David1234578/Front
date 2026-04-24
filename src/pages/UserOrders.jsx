@@ -2,27 +2,30 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import OrderCard from '../components/OrderCard';
+import useAuth from '../hooks/useAuth';
 import styles from '../styles/UserOrders.module.css';
-import { loadOrders } from '../utils/ordersStorage';
+import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function UserOrders() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const orders = useMemo(
     () =>
-      loadOrders().sort(
+      loadOrdersByUserId(currentUser?.id).sort(
         (leftOrder, rightOrder) => new Date(rightOrder.createdAt) - new Date(leftOrder.createdAt)
       ),
-    []
+    [currentUser?.id]
   );
 
   if (orders.length === 0) {
     return (
       <section className={styles.container}>
         <div className={styles.emptyState}>
-          <p className={styles.eyebrow}>Semana 10</p>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Mis ordenes</h1>
           <p className={styles.subtitle}>
-            Todavia no hay compras guardadas. Completa el flujo de checkout para poblar esta vista.
+            Todavía no hay compras asociadas a tu sesión. Completa el checkout autenticado para
+            poblar esta vista.
           </p>
           <div className={styles.actions}>
             <button
@@ -45,10 +48,11 @@ function UserOrders() {
     <section className={styles.container}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Semana 10</p>
+          <p className={styles.eyebrow}>Semana 11</p>
           <h1 className={styles.title}>Historial de ordenes</h1>
           <p className={styles.subtitle}>
-            Recupera las compras persistidas en localStorage y navega al detalle de cada pedido.
+            Recupera únicamente las compras del usuario autenticado y navega al detalle de cada
+            pedido.
           </p>
         </div>
 
