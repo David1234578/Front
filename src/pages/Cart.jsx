@@ -1,10 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 
+import useCart from '../hooks/useCart';
+import cartService from '../services/cartService';
 import styles from '../styles/Cart.module.css';
 import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
 
-function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
+function Cart() {
+  const { cartItems, clearCart, removeCartItem, updateCartItemQuantity } = useCart();
+  const cart = cartService.getCart();
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const subtotal = calculateCartSubtotal(cartItems);
   const navigate = useNavigate();
@@ -65,10 +69,11 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
                     <span className={styles.category}>{item.category}</span>
                     <h2 className={styles.name}>{item.name}</h2>
                     <p className={styles.price}>Precio unitario: {formatCOP(item.price)}</p>
-                    <p className={styles.stock}>Stock disponible: {item.stock}</p>
+                    <p className={styles.stock}>Stock disponible: {item.stockQty ?? item.stock}</p>
+                    {item.sku ? <p className={styles.stock}>SKU: {item.sku}</p> : null}
                     <p className={styles.subtotal}>
                       <span className={styles.subtotalLabel}>Subtotal:</span>{' '}
-                      {formatCOP(itemSubtotal)}
+                      {formatCOP(item.lineTotal ?? itemSubtotal)}
                     </p>
                   </div>
 
@@ -77,7 +82,7 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
                       <button
                         type="button"
                         className={styles.btnQuantity}
-                        onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                       >
                         -
@@ -86,8 +91,8 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
                       <button
                         type="button"
                         className={styles.btnQuantity}
-                        onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                        disabled={item.quantity >= item.stock}
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                        disabled={item.quantity >= (item.stockQty ?? item.stock)}
                       >
                         +
                       </button>
@@ -96,7 +101,7 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
                     <button
                       type="button"
                       className={styles.btnRemove}
-                      onClick={() => onRemoveItem(item.id)}
+                      onClick={() => removeCartItem(item.id)}
                     >
                       Eliminar
                     </button>
@@ -111,6 +116,11 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
           <h2 className={styles.summaryTitle}>Resumen</h2>
 
           <div className={styles.summaryRows}>
+            <div className={styles.summaryRow}>
+              <span>Cart ID</span>
+              <span className={styles.summaryValue}>{cart.id}</span>
+            </div>
+
             <div className={styles.summaryRow}>
               <span>Productos</span>
               <span className={styles.summaryValue}>{cartItems.length}</span>
@@ -127,7 +137,7 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
             </div>
           </div>
 
-          <button type="button" className={styles.btnClear} onClick={onClearCart}>
+          <button type="button" className={styles.btnClear} onClick={clearCart}>
             Vaciar carrito
           </button>
 

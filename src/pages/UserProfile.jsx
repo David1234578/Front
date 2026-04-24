@@ -1,12 +1,32 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import AddressForm from '../components/AddressForm';
 import ChangePasswordForm from '../components/ChangePasswordForm';
 import UserProfileForm from '../components/UserProfileForm';
 import useAuth from '../hooks/useAuth';
+import addressService from '../services/addressService';
 import orderService from '../services/orderService';
 import styles from '../styles/UserProfile.module.css';
 import { formatCOP } from '../utils/formatCOP';
+
+const formatCreatedAt = (value) => {
+  if (!value) {
+    return 'Sin fecha registrada';
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return 'Sin fecha registrada';
+  }
+
+  return parsedDate.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+};
 
 function UserProfile() {
   const navigate = useNavigate();
@@ -18,23 +38,40 @@ function UserProfile() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [addresses, setAddresses] = useState(() =>
+    addressService.getAddressesByUserId(currentUser?.id)
+  );
+  const [addressError, setAddressError] = useState('');
+  const [addressSuccess, setAddressSuccess] = useState('');
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
   const orders = useMemo(() => orderService.getOrdersByUserId(currentUser?.id), [currentUser?.id]);
   const latestOrder = orders[0] ?? null;
 
   const profile = {
-    name: currentUser?.name || 'Invitado',
+    fullName: currentUser?.fullName || currentUser?.name || 'Invitado',
+    firstName: currentUser?.firstName || 'Sin nombre registrado',
+    lastName: currentUser?.lastName || 'Sin apellido registrado',
     email: currentUser?.email || 'Sin correo registrado',
     role: currentUser?.role === 'admin' ? 'Administrador' : 'Cliente',
     phone: currentUser?.phone || 'Sin telefono registrado',
-    address: currentUser?.address || 'Aun no hay direccion registrada',
-    city: currentUser?.city || 'Sin ciudad registrada',
-    postalCode: currentUser?.postalCode || '---',
+    status: currentUser?.status === 'ACTIVE' ? 'Activa' : currentUser?.status || 'Sin estado',
+    createdAt: formatCreatedAt(currentUser?.createdAt),
   };
 
   const stats = {
     totalOrders: orders.length,
     latestOrderId: latestOrder?.id ?? 'Sin compras',
     latestTotal: latestOrder ? formatCOP(latestOrder.totals.total) : 'Sin compras',
+  };
+
+  useEffect(() => {
+    setAddresses(addressService.getAddressesByUserId(currentUser?.id));
+  }, [currentUser?.id]);
+
+  const refreshAddresses = () => {
+    setAddresses(addressService.getAddressesByUserId(currentUser?.id));
   };
 
   const handleStartEdit = () => {
@@ -89,6 +126,86 @@ function UserProfile() {
     }
   };
 
+  const handleStartCreateAddress = () => {
+    setAddressError('');
+    setAddressSuccess('');
+    setEditingAddress(null);
+    setIsEditingAddress(true);
+  };
+
+  const handleStartEditAddress = (address) => {
+    setAddressError('');
+    setAddressSuccess('');
+    setEditingAddress(address);
+    setIsEditingAddress(true);
+  };
+
+  const handleCancelAddress = () => {
+    setAddressError('');
+    setEditingAddress(null);
+    setIsEditingAddress(false);
+  };
+
+  const handleAddressSubmit = async (addressValues) => {
+    setIsSavingAddress(true);
+    setAddressError('');
+    setAddressSuccess('');
+
+    try {
+      const savedAddress = await addressService.saveUserAddressAsync(
+        currentUser?.id,
+        addressValues
+      );
+
+      if (!savedAddress) {
+        setAddressError('No fue posible guardar la dirección.');
+        return { ok: false };
+      }
+
+      refreshAddresses();
+      setIsEditingAddress(false);
+      setEditingAddress(null);
+      setAddressSuccess('La dirección fue guardada correctamente.');
+      return { ok: true };
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    setAddressError('');
+    setAddressSuccess('');
+
+    try {
+      await addressService.deleteUserAddressAsync(currentUser?.id, addressId);
+      refreshAddresses();
+      setAddressSuccess('La dirección fue eliminada correctamente.');
+    } catch (error) {
+      setAddressError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible eliminar la dirección.'
+      );
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId) => {
+    setAddressError('');
+    setAddressSuccess('');
+
+    try {
+      await addressService.setUserDefaultAddressAsync(currentUser?.id, addressId);
+      refreshAddresses();
+      setAddressSuccess('La dirección predeterminada fue actualizada.');
+    } catch (error) {
+      setAddressError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible actualizar la dirección predeterminada.'
+      );
+    }
+  };
+
   return (
     <section className={styles.container}>
       <header className={styles.header}>
@@ -96,8 +213,8 @@ function UserProfile() {
           <p className={styles.eyebrow}>Semana 15</p>
           <h1 className={styles.title}>Mi cuenta</h1>
           <p className={styles.subtitle}>
-            Esta vista centraliza la sesión autenticada, permite editar el perfil y agrega un cambio
-            de contraseña controlado desde la cuenta actual.
+            Esta vista centraliza la sesión autenticada, permite editar la identidad del usuario y
+            mantiene el cambio de contraseña alineado con el contrato actual del backend.
           </p>
         </div>
 
@@ -131,8 +248,8 @@ function UserProfile() {
               <div>
                 <h2 className={styles.sectionTitle}>Datos del perfil</h2>
                 <p className={styles.sectionText}>
-                  Puedes actualizar tus datos personales desde esta misma sección. El correo y el
-                  rol permanecen solo lectura.
+                  Puedes actualizar nombre, apellido y teléfono. El correo, el rol y el estado se
+                  mantienen solo lectura. Las direcciones se moverán a su propio recurso.
                 </p>
               </div>
 
@@ -158,8 +275,16 @@ function UserProfile() {
             ) : (
               <div className={styles.infoGrid}>
                 <div className={styles.infoItem}>
+                  <span className={styles.label}>Nombre completo</span>
+                  <strong>{profile.fullName}</strong>
+                </div>
+                <div className={styles.infoItem}>
                   <span className={styles.label}>Nombre</span>
-                  <strong>{profile.name}</strong>
+                  <strong>{profile.firstName}</strong>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>Apellido</span>
+                  <strong>{profile.lastName}</strong>
                 </div>
                 <div className={styles.infoItem}>
                   <span className={styles.label}>Correo</span>
@@ -174,16 +299,12 @@ function UserProfile() {
                   <strong>{profile.phone}</strong>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.label}>Direccion</span>
-                  <strong>{profile.address}</strong>
+                  <span className={styles.label}>Estado de cuenta</span>
+                  <strong>{profile.status}</strong>
                 </div>
                 <div className={styles.infoItem}>
-                  <span className={styles.label}>Ciudad</span>
-                  <strong>{profile.city}</strong>
-                </div>
-                <div className={styles.infoItem}>
-                  <span className={styles.label}>Codigo postal</span>
-                  <strong>{profile.postalCode}</strong>
+                  <span className={styles.label}>Creada el</span>
+                  <strong>{profile.createdAt}</strong>
                 </div>
               </div>
             )}
@@ -194,8 +315,8 @@ function UserProfile() {
               <div>
                 <h2 className={styles.sectionTitle}>Seguridad de la cuenta</h2>
                 <p className={styles.sectionText}>
-                  Cambia tu contraseña desde la sesión actual. La recuperación por correo queda para
-                  una etapa con backend real.
+                  Cambia tu contraseña desde la sesión actual. El backend responde con éxito sin
+                  payload y la sesión vigente se mantiene activa.
                 </p>
               </div>
             </div>
@@ -206,6 +327,97 @@ function UserProfile() {
               submitError={passwordError}
               submitSuccess={passwordSuccess}
             />
+          </section>
+
+          <section className={styles.card}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>Direcciones</h2>
+                <p className={styles.sectionText}>
+                  Gestiona las direcciones que luego se usarán en checkout como envío y facturación.
+                </p>
+              </div>
+
+              {!isEditingAddress ? (
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={handleStartCreateAddress}
+                >
+                  Agregar dirección
+                </button>
+              ) : null}
+            </div>
+
+            {addressSuccess ? <p className={styles.successBanner}>{addressSuccess}</p> : null}
+            {addressError ? <p className={styles.errorBanner}>{addressError}</p> : null}
+
+            {isEditingAddress ? (
+              <AddressForm
+                initialValues={editingAddress}
+                isSubmitting={isSavingAddress}
+                onCancel={handleCancelAddress}
+                onSubmit={handleAddressSubmit}
+                submitError={addressError}
+              />
+            ) : addresses.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyText}>
+                  Aún no tienes direcciones guardadas. Crea al menos una para preparar el checkout.
+                </p>
+              </div>
+            ) : (
+              <div className={styles.addressList}>
+                {addresses.map((address) => (
+                  <article key={address.id} className={styles.addressCard}>
+                    <div className={styles.addressHeader}>
+                      <div>
+                        <strong>{address.type === 'BILLING' ? 'Facturación' : 'Envío'}</strong>
+                        {address.isDefault ? (
+                          <span className={styles.addressBadge}>Predeterminada</span>
+                        ) : null}
+                      </div>
+                      <div className={styles.addressActions}>
+                        {!address.isDefault ? (
+                          <button
+                            type="button"
+                            className={styles.secondaryButton}
+                            onClick={() => handleSetDefaultAddress(address.id)}
+                          >
+                            Usar por defecto
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={() => handleStartEditAddress(address)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={() => handleDeleteAddress(address.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className={styles.addressBody}>
+                      <p>{address.line1}</p>
+                      {address.line2 ? <p>{address.line2}</p> : null}
+                      <p>
+                        {address.city}, {address.state}
+                      </p>
+                      <p>
+                        {address.country} - {address.postalCode}
+                      </p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
@@ -230,9 +442,9 @@ function UserProfile() {
           {latestOrder ? (
             <div className={styles.latestOrder}>
               <p className={styles.latestOrderText}>
-                Tu compra mas reciente fue enviada con{' '}
-                <strong>{latestOrder.shippingMethod.label}</strong> y pagada con{' '}
-                <strong>{latestOrder.paymentMethod.label}</strong>.
+                Tu compra más reciente quedó registrada como{' '}
+                <strong>{latestOrder.orderNumber || latestOrder.id}</strong> con estado{' '}
+                <strong>{latestOrder.status}</strong>.
               </p>
               <button
                 type="button"

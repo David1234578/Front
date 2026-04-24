@@ -61,10 +61,11 @@ function AdminProducts() {
         return true;
       }
 
-      return [product.name, product.category, product.description].some((field) =>
-        String(field ?? '')
-          .toLowerCase()
-          .includes(normalizedQuery)
+      return [product.name, product.categoryName ?? product.category, product.description].some(
+        (field) =>
+          String(field ?? '')
+            .toLowerCase()
+            .includes(normalizedQuery)
       );
     });
   }, [productsState, query]);
@@ -236,9 +237,13 @@ function AdminProducts() {
                   id={product.id}
                   name={product.name}
                   category={product.category}
+                  categoryName={product.categoryName}
                   price={product.price}
                   rating={product.rating}
                   stock={product.stock}
+                  stockQty={product.stockQty}
+                  isActive={product.isActive}
+                  isAvailable={product.isAvailable}
                   image={product.image}
                   description={product.description}
                   onDelete={() => handleDeleteProduct(product.id)}

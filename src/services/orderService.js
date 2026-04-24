@@ -1,7 +1,26 @@
+import { appConfig } from '../config';
+import { loadSessionToken } from '../utils/authStorage';
+import { loadCart } from '../utils/cartStorage';
 import { loadOrders, loadOrdersByUserId, saveOrder } from '../utils/ordersStorage';
 
-const createLocalOrderId = () => `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+import { requestJson } from './http';
+
+const createLocalOrderId = () => String(Date.now());
+const createLocalOrderNumber = () =>
+  `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(
+    Math.random() * 1000000
+  )
+    .toString()
+    .padStart(6, '0')}`;
 const toAsyncResult = (callback) => Promise.resolve().then(callback);
+
+const normalizeOrderPayload = (order) => ({
+  ...order,
+  id: String(order?.id ?? createLocalOrderId()),
+  orderNumber: String(order?.orderNumber ?? createLocalOrderNumber()),
+  status: String(order?.status ?? 'PENDING'),
+  createdAt: order?.createdAt ?? new Date().toISOString(),
+});
 
 function getOrders() {
   return loadOrders();
@@ -16,12 +35,7 @@ function getOrderByIdForUser(userId, orderId) {
 }
 
 function createOrder(order) {
-  return saveOrder({
-    ...order,
-    id: String(order?.id ?? createLocalOrderId()),
-    status: String(order?.status ?? 'confirmed'),
-    createdAt: order?.createdAt ?? new Date().toISOString(),
-  });
+  return saveOrder(normalizeOrderPayload(order));
 }
 
 function getOrdersAsync() {
@@ -37,7 +51,21 @@ function getOrderByIdForUserAsync(userId, orderId) {
 }
 
 function createOrderAsync(order) {
-  return toAsyncResult(() => createOrder(order));
+  if (!appConfig.useRemoteApi) {
+    return toAsyncResult(() => createOrder(order));
+  }
+
+  const cart = loadCart();
+
+  return requestJson('/orders/checkout', {
+    method: 'POST',
+    token: loadSessionToken(),
+    body: {
+      cartId: cart.id,
+      shippingAddressId: order?.shippingAddress?.id ?? order?.shippingAddressId,
+      billingAddressId: order?.billingAddress?.id ?? order?.billingAddressId,
+    },
+  }).then((response) => saveOrder(normalizeOrderPayload(response)));
 }
 
 const orderService = {

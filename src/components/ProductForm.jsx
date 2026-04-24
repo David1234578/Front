@@ -25,9 +25,9 @@ function ProductForm({
     if (initialValues) {
       setValues({
         name: initialValues.name ?? '',
-        category: initialValues.category ?? '',
+        category: initialValues.categoryName ?? initialValues.category ?? '',
         price: initialValues.price ?? '',
-        stock: initialValues.stock ?? '',
+        stock: initialValues.stockQty ?? initialValues.stock ?? '',
         image: initialValues.image ?? '',
         description: initialValues.description ?? '',
       });
@@ -62,12 +62,16 @@ function ProductForm({
     const result = await onSubmit({
       ...initialValues,
       name,
+      categoryId: initialValues?.categoryId,
+      categoryName: category,
       category,
       price,
+      stockQty: stock,
       stock,
       image,
       description,
       rating,
+      isActive: initialValues?.isActive ?? true,
     });
 
     if (!isEditing && result?.ok !== false) {

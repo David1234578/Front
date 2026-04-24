@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
+import useCart from '../hooks/useCart';
 import productService from '../services/productService';
 import styles from '../styles/CategoryProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
 
-function CategoryProducts({ cartItems, onAddToCart }) {
+function CategoryProducts() {
+  const { addToCart, cartItems } = useCart();
   const [query, setQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +33,8 @@ function CategoryProducts({ cartItems, onAddToCart }) {
     const q = query.trim().toLowerCase();
 
     return productsState.filter((product) => {
-      if (product.category !== category) return false;
+      if (product.isActive === false) return false;
+      if ((product.categoryName ?? product.category) !== category) return false;
       if (!q) return true;
 
       return String(product.name ?? '')
@@ -84,13 +87,17 @@ function CategoryProducts({ cartItems, onAddToCart }) {
               id={product.id}
               name={product.name}
               category={product.category}
+              categoryName={product.categoryName}
               rating={product.rating}
               price={product.price}
               stock={product.stock}
+              stockQty={product.stockQty}
+              isActive={product.isActive}
+              isAvailable={product.isAvailable}
               image={product.image}
               description={product.description}
-              onAddToCart={onAddToCart}
-              disableAddToCart={(cartQuantityByProductId.get(product.id) ?? 0) >= product.stock}
+              onAddToCart={addToCart}
+              disableAddToCart={(cartQuantityByProductId.get(product.id) ?? 0) >= product.stockQty}
               onDetails={() => handleOpenDetails(product)}
             />
           ))}

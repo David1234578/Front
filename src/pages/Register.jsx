@@ -6,7 +6,8 @@ import styles from '../styles/AuthPage.module.css';
 
 function Register() {
   const [values, setValues] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -31,7 +32,8 @@ function Register() {
     }
 
     const result = await register({
-      name: values.name,
+      firstName: values.firstName,
+      lastName: values.lastName,
       email: values.email,
       password: values.password,
     });
@@ -60,10 +62,22 @@ function Register() {
             <input
               className={styles.input}
               disabled={isSubmittingAuth}
-              name="name"
-              value={values.name}
+              name="firstName"
+              value={values.firstName}
               onChange={handleChange}
-              placeholder="Ejemplo: Ana Gómez"
+              placeholder="Ejemplo: Ana"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Apellido</span>
+            <input
+              className={styles.input}
+              disabled={isSubmittingAuth}
+              name="lastName"
+              value={values.lastName}
+              onChange={handleChange}
+              placeholder="Ejemplo: Gómez"
             />
           </label>
 

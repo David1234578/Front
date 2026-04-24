@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import AdminRoute from './components/AdminRoute';
@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuth from './hooks/useAuth';
+import useCart from './hooks/useCart';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminProducts from './pages/AdminProducts';
 import Cart from './pages/Cart';
@@ -20,121 +21,52 @@ import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
+import cartService from './services/cartService';
 import orderService from './services/orderService';
-import {
-  calculateOrderTotals,
-  getPaymentMethodById,
-  getShippingOptionById,
-} from './utils/calculateOrderTotals';
-import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
+import { calculateOrderTotals } from './utils/calculateOrderTotals';
 
 import './App.css';
 
 function App() {
   const { currentUser } = useAuth();
-  const [cartItems, setCartItems] = useState(loadCartItems);
+  const { cartItemCount, cartItems, clearCart } = useCart();
   const [latestOrder, setLatestOrder] = useState(null);
 
-  useEffect(() => {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  const handleAddToCart = (product) => {
-    if (!product || !Number.isFinite(Number(product.id))) {
-      return;
-    }
-
-    setCartItems((currentItems) => {
-      const existingItem = currentItems.find((item) => item.id === product.id);
-      const stock =
-        Number.isFinite(Number(product.stock)) && Number(product.stock) > 0
-          ? Number(product.stock)
-          : 1;
-
-      if (!existingItem) {
-        return [
-          ...currentItems,
-          {
-            id: Number(product.id),
-            name: product.name,
-            category: product.category,
-            price: Number(product.price) || 0,
-            stock,
-            image: product.image,
-            quantity: 1,
-          },
-        ];
-      }
-
-      return currentItems.map((item) => {
-        if (item.id !== product.id) {
-          return item;
-        }
-
-        return {
-          ...item,
-          stock,
-          quantity: Math.min(item.quantity + 1, stock),
-        };
-      });
-    });
-  };
-
-  const handleUpdateCartItemQuantity = (productId, nextQuantity) => {
-    setCartItems((currentItems) =>
-      currentItems.flatMap((item) => {
-        if (item.id !== productId) {
-          return [item];
-        }
-
-        const stock =
-          Number.isFinite(Number(item.stock)) && Number(item.stock) > 0 ? Number(item.stock) : 1;
-        const normalizedQuantity = Math.max(
-          1,
-          Math.min(stock, Math.floor(Number(nextQuantity) || 1))
-        );
-
-        return normalizedQuantity > 0 ? [{ ...item, quantity: normalizedQuantity }] : [];
-      })
-    );
-  };
-
-  const handleRemoveCartItem = (productId) => {
-    setCartItems((currentItems) => currentItems.filter((item) => item.id !== productId));
-  };
-
-  const handleClearCart = () => {
-    setCartItems([]);
-  };
-
-  const handleCompleteCheckout = async ({ customer, shippingMethodId, paymentMethodId }) => {
+  const handleCompleteCheckout = async ({
+    billingAddress,
+    customer,
+    shippingAddress,
+    billingAddressId,
+    shippingAddressId,
+  }) => {
     if (cartItems.length === 0) {
       return null;
     }
 
-    const totals = calculateOrderTotals(cartItems, shippingMethodId);
+    const cart = cartService.getCart();
+    const totals = calculateOrderTotals(cartItems);
     const order = await orderService.createOrderAsync({
+      cartId: cart.id,
       userId: currentUser?.id ?? '',
+      userEmail: currentUser?.email ?? customer.email,
+      userFullName: currentUser?.fullName ?? customer.fullName,
       items: cartItems.map((item) => ({ ...item })),
       customer,
-      shippingMethod: getShippingOptionById(shippingMethodId),
-      paymentMethod: getPaymentMethodById(paymentMethodId),
+      shippingAddress,
+      shippingAddressId,
+      billingAddress,
+      billingAddressId,
       totals,
     });
 
     setLatestOrder(order);
-    setCartItems([]);
+    clearCart();
     return order;
   };
 
   const handleBackHomeAfterOrder = () => {
     setLatestOrder(null);
   };
-
-  const cartItemCount = useMemo(
-    () => cartItems.reduce((total, item) => total + item.quantity, 0),
-    [cartItems]
-  );
 
   return (
     <div className="app">
@@ -145,34 +77,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route
-            path="/category/:categoryName"
-            element={<CategoryProducts cartItems={cartItems} onAddToCart={handleAddToCart} />}
-          />
-          <Route
-            path="/products"
-            element={<ProductList cartItems={cartItems} onAddToCart={handleAddToCart} />}
-          />
-          <Route
-            path="/cart"
-            element={
-              <Cart
-                cartItems={cartItems}
-                onUpdateQuantity={handleUpdateCartItemQuantity}
-                onRemoveItem={handleRemoveCartItem}
-                onClearCart={handleClearCart}
-              />
-            }
-          />
+          <Route path="/category/:categoryName" element={<CategoryProducts />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/cart" element={<Cart />} />
           <Route
             path="/checkout"
             element={
               <ProtectedRoute>
-                <Checkout
-                  cartItems={cartItems}
-                  user={currentUser}
-                  onCompleteCheckout={handleCompleteCheckout}
-                />
+                <Checkout onCompleteCheckout={handleCompleteCheckout} />
               </ProtectedRoute>
             }
           />

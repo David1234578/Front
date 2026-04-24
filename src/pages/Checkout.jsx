@@ -1,26 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import useAuth from '../hooks/useAuth';
+import useCart from '../hooks/useCart';
+import addressService from '../services/addressService';
+import cartService from '../services/cartService';
 import styles from '../styles/Checkout.module.css';
-import {
-  calculateOrderTotals,
-  PAYMENT_METHODS,
-  SHIPPING_OPTIONS,
-} from '../utils/calculateOrderTotals';
+import { calculateOrderTotals } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
 
 const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/;
 
-function Checkout({ cartItems, user, onCompleteCheckout }) {
+function Checkout({ onCompleteCheckout }) {
+  const { currentUser: user } = useAuth();
+  const { cartItems } = useCart();
+  const [addresses, setAddresses] = useState([]);
   const [values, setValues] = useState({
-    fullName: user?.name ?? '',
+    fullName: user?.fullName ?? user?.name ?? '',
     email: user?.email ?? '',
     phone: user?.phone ?? '',
-    address: user?.address ?? '',
-    city: user?.city ?? '',
-    postalCode: user?.postalCode ?? '',
-    shippingMethod: SHIPPING_OPTIONS[0].id,
-    paymentMethod: PAYMENT_METHODS[0].id,
+    shippingAddressId: '',
+    billingAddressId: '',
   });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
@@ -28,21 +28,33 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const userAddresses = addressService.getAddressesByUserId(user?.id);
+    const defaultAddress =
+      userAddresses.find((address) => address.isDefault) ?? userAddresses[0] ?? null;
+
+    setAddresses(userAddresses);
     setValues((currentValues) => ({
       ...currentValues,
-      fullName: user?.name ?? currentValues.fullName,
+      fullName: user?.fullName ?? user?.name ?? currentValues.fullName,
       email: user?.email ?? currentValues.email,
       phone: user?.phone ?? currentValues.phone,
-      address: user?.address ?? currentValues.address,
-      city: user?.city ?? currentValues.city,
-      postalCode: user?.postalCode ?? currentValues.postalCode,
+      shippingAddressId: defaultAddress?.id ?? currentValues.shippingAddressId,
+      billingAddressId: defaultAddress?.id ?? currentValues.billingAddressId,
     }));
   }, [user]);
 
-  const totals = useMemo(
-    () => calculateOrderTotals(cartItems, values.shippingMethod),
-    [cartItems, values.shippingMethod]
+  const shippingAddress = useMemo(
+    () => addresses.find((address) => address.id === values.shippingAddressId) ?? null,
+    [addresses, values.shippingAddressId]
   );
+
+  const billingAddress = useMemo(
+    () => addresses.find((address) => address.id === values.billingAddressId) ?? null,
+    [addresses, values.billingAddressId]
+  );
+
+  const totals = useMemo(() => calculateOrderTotals(cartItems), [cartItems]);
+  const cart = cartService.getCart();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -69,12 +81,10 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
       nextErrors.email = 'Ingresa un correo electrónico válido.';
     }
     if (!values.phone.trim()) nextErrors.phone = 'Ingresa un número de contacto.';
-    if (!values.address.trim()) nextErrors.address = 'Ingresa la dirección de entrega.';
-    if (!values.city.trim()) nextErrors.city = 'Ingresa la ciudad.';
-    if (!values.postalCode.trim()) nextErrors.postalCode = 'Ingresa el código postal.';
-    if (!values.shippingMethod) nextErrors.shippingMethod = 'Selecciona un método de envío.';
-    if (!values.paymentMethod) nextErrors.paymentMethod = 'Selecciona un método de pago.';
-
+    if (!values.shippingAddressId)
+      nextErrors.shippingAddressId = 'Selecciona la dirección de envío.';
+    if (!values.billingAddressId)
+      nextErrors.billingAddressId = 'Selecciona la dirección de facturación.';
     return nextErrors;
   };
 
@@ -97,12 +107,14 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
           fullName: values.fullName.trim(),
           email: values.email.trim(),
           phone: values.phone.trim(),
-          address: values.address.trim(),
-          city: values.city.trim(),
-          postalCode: values.postalCode.trim(),
+          address: shippingAddress?.line1 ?? '',
+          city: shippingAddress?.city ?? '',
+          postalCode: shippingAddress?.postalCode ?? '',
         },
-        shippingMethodId: values.shippingMethod,
-        paymentMethodId: values.paymentMethod,
+        billingAddress,
+        billingAddressId: values.billingAddressId,
+        shippingAddress,
+        shippingAddressId: values.shippingAddressId,
       });
 
       if (order) {
@@ -135,6 +147,26 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
             onClick={() => navigate('/cart')}
           >
             Volver al carrito
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  if (addresses.length === 0) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.emptyState}>
+          <h1 className={styles.title}>Checkout</h1>
+          <p className={styles.emptyText}>
+            Antes de continuar necesitas al menos una dirección guardada en tu cuenta.
+          </p>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate('/user/profile')}
+          >
+            Ir a mi cuenta
           </button>
         </div>
       </section>
@@ -204,99 +236,97 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
               </label>
 
               <label className={`${styles.field} ${styles.fieldWide}`}>
-                <span className={styles.label}>Dirección</span>
-                <input
+                <span className={styles.label}>Cart ID local</span>
+                <input className={styles.input} disabled value={cart.id} readOnly />
+              </label>
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Direcciones guardadas</h2>
+
+            <div className={styles.addressSelectionGrid}>
+              <label className={styles.field}>
+                <span className={styles.label}>Dirección de envío</span>
+                <select
                   className={styles.input}
                   disabled={isSubmitting}
-                  name="address"
-                  value={values.address}
+                  name="shippingAddressId"
                   onChange={handleChange}
-                  placeholder="Calle 10 # 20-30"
-                />
-                {errors.address ? <span className={styles.error}>{errors.address}</span> : null}
+                  value={values.shippingAddressId}
+                >
+                  <option value="">Selecciona una dirección</option>
+                  {addresses.map((address) => (
+                    <option key={`shipping-${address.id}`} value={address.id}>
+                      {address.line1} - {address.city}
+                    </option>
+                  ))}
+                </select>
+                {errors.shippingAddressId ? (
+                  <span className={styles.error}>{errors.shippingAddressId}</span>
+                ) : null}
               </label>
 
               <label className={styles.field}>
-                <span className={styles.label}>Ciudad</span>
-                <input
+                <span className={styles.label}>Dirección de facturación</span>
+                <select
                   className={styles.input}
                   disabled={isSubmitting}
-                  name="city"
-                  value={values.city}
+                  name="billingAddressId"
                   onChange={handleChange}
-                  placeholder="Medellín"
-                />
-                {errors.city ? <span className={styles.error}>{errors.city}</span> : null}
-              </label>
-
-              <label className={styles.field}>
-                <span className={styles.label}>Código postal</span>
-                <input
-                  className={styles.input}
-                  disabled={isSubmitting}
-                  name="postalCode"
-                  value={values.postalCode}
-                  onChange={handleChange}
-                  placeholder="050021"
-                />
-                {errors.postalCode ? (
-                  <span className={styles.error}>{errors.postalCode}</span>
+                  value={values.billingAddressId}
+                >
+                  <option value="">Selecciona una dirección</option>
+                  {addresses.map((address) => (
+                    <option key={`billing-${address.id}`} value={address.id}>
+                      {address.line1} - {address.city}
+                    </option>
+                  ))}
+                </select>
+                {errors.billingAddressId ? (
+                  <span className={styles.error}>{errors.billingAddressId}</span>
                 ) : null}
               </label>
             </div>
-          </section>
 
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Método de envío</h2>
-            <div className={styles.optionList}>
-              {SHIPPING_OPTIONS.map((option) => (
-                <label key={option.id} className={styles.optionCard}>
-                  <input
-                    type="radio"
-                    disabled={isSubmitting}
-                    name="shippingMethod"
-                    value={option.id}
-                    checked={values.shippingMethod === option.id}
-                    onChange={handleChange}
-                  />
-                  <div>
-                    <span className={styles.optionTitle}>{option.label}</span>
-                    <p className={styles.optionDescription}>{option.description}</p>
-                  </div>
-                  <strong className={styles.optionPrice}>{formatCOP(option.price)}</strong>
-                </label>
-              ))}
+            <div className={styles.addressPreviewGrid}>
+              <article className={styles.addressPreviewCard}>
+                <h3 className={styles.previewTitle}>Envío</h3>
+                {shippingAddress ? (
+                  <>
+                    <p>{shippingAddress.line1}</p>
+                    {shippingAddress.line2 ? <p>{shippingAddress.line2}</p> : null}
+                    <p>
+                      {shippingAddress.city}, {shippingAddress.state}
+                    </p>
+                    <p>
+                      {shippingAddress.country} - {shippingAddress.postalCode}
+                    </p>
+                  </>
+                ) : (
+                  <p>Selecciona una dirección.</p>
+                )}
+              </article>
+
+              <article className={styles.addressPreviewCard}>
+                <h3 className={styles.previewTitle}>Facturación</h3>
+                {billingAddress ? (
+                  <>
+                    <p>{billingAddress.line1}</p>
+                    {billingAddress.line2 ? <p>{billingAddress.line2}</p> : null}
+                    <p>
+                      {billingAddress.city}, {billingAddress.state}
+                    </p>
+                    <p>
+                      {billingAddress.country} - {billingAddress.postalCode}
+                    </p>
+                  </>
+                ) : (
+                  <p>Selecciona una dirección.</p>
+                )}
+              </article>
             </div>
-            {errors.shippingMethod ? (
-              <span className={styles.error}>{errors.shippingMethod}</span>
-            ) : null}
           </section>
-
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Método de pago</h2>
-            <div className={styles.optionList}>
-              {PAYMENT_METHODS.map((option) => (
-                <label key={option.id} className={styles.optionCard}>
-                  <input
-                    type="radio"
-                    disabled={isSubmitting}
-                    name="paymentMethod"
-                    value={option.id}
-                    checked={values.paymentMethod === option.id}
-                    onChange={handleChange}
-                  />
-                  <div>
-                    <span className={styles.optionTitle}>{option.label}</span>
-                    <p className={styles.optionDescription}>{option.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-            {errors.paymentMethod ? (
-              <span className={styles.error}>{errors.paymentMethod}</span>
-            ) : null}
-          </section>
-
           {submitError ? <p className={styles.error}>{submitError}</p> : null}
 
           <div className={styles.actions}>
@@ -344,7 +374,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
               <strong>{formatCOP(totals.tax)}</strong>
             </div>
             <div className={styles.totalRow}>
-              <span>{totals.shippingOption.label}</span>
+              <span>Envío</span>
               <strong>{formatCOP(totals.shipping)}</strong>
             </div>
             <div className={`${styles.totalRow} ${styles.totalRowStrong}`}>

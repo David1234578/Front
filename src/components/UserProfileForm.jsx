@@ -3,11 +3,9 @@ import { useEffect, useState } from 'react';
 import styles from '../styles/UserProfile.module.css';
 
 const emptyValues = {
-  name: '',
+  firstName: '',
+  lastName: '',
   phone: '',
-  address: '',
-  city: '',
-  postalCode: '',
 };
 
 function UserProfileForm({
@@ -24,11 +22,9 @@ function UserProfileForm({
 
   useEffect(() => {
     setValues({
-      name: initialValues?.name ?? '',
+      firstName: initialValues?.firstName ?? '',
+      lastName: initialValues?.lastName ?? '',
       phone: initialValues?.phone ?? '',
-      address: initialValues?.address ?? '',
-      city: initialValues?.city ?? '',
-      postalCode: initialValues?.postalCode ?? '',
     });
     setErrors({});
   }, [initialValues]);
@@ -50,8 +46,12 @@ function UserProfileForm({
   const validateValues = () => {
     const nextErrors = {};
 
-    if (!values.name.trim()) {
-      nextErrors.name = 'Ingresa un nombre para el perfil.';
+    if (!values.firstName.trim()) {
+      nextErrors.firstName = 'Ingresa el nombre para el perfil.';
+    }
+
+    if (!values.lastName.trim()) {
+      nextErrors.lastName = 'Ingresa el apellido para el perfil.';
     }
 
     if (values.phone.trim() && values.phone.trim().length < 7) {
@@ -72,11 +72,9 @@ function UserProfileForm({
     }
 
     await onSubmit({
-      name: values.name.trim(),
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
       phone: values.phone.trim(),
-      address: values.address.trim(),
-      city: values.city.trim(),
-      postalCode: values.postalCode.trim(),
     });
   };
 
@@ -84,16 +82,29 @@ function UserProfileForm({
     <form className={styles.form} onSubmit={handleSubmit}>
       <div className={styles.fieldGrid}>
         <label className={styles.field}>
-          <span className={styles.label}>Nombre completo</span>
+          <span className={styles.label}>Nombre</span>
           <input
             className={styles.input}
             disabled={isSubmitting}
-            name="name"
+            name="firstName"
             onChange={handleChange}
-            placeholder="Ejemplo: Ana Gómez"
-            value={values.name}
+            placeholder="Ejemplo: Ana"
+            value={values.firstName}
           />
-          {errors.name ? <span className={styles.error}>{errors.name}</span> : null}
+          {errors.firstName ? <span className={styles.error}>{errors.firstName}</span> : null}
+        </label>
+
+        <label className={styles.field}>
+          <span className={styles.label}>Apellido</span>
+          <input
+            className={styles.input}
+            disabled={isSubmitting}
+            name="lastName"
+            onChange={handleChange}
+            placeholder="Ejemplo: Gómez"
+            value={values.lastName}
+          />
+          {errors.lastName ? <span className={styles.error}>{errors.lastName}</span> : null}
         </label>
 
         <label className={styles.field}>
@@ -120,42 +131,6 @@ function UserProfileForm({
             value={values.phone}
           />
           {errors.phone ? <span className={styles.error}>{errors.phone}</span> : null}
-        </label>
-
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <span className={styles.label}>Dirección</span>
-          <input
-            className={styles.input}
-            disabled={isSubmitting}
-            name="address"
-            onChange={handleChange}
-            placeholder="Calle 10 #20-30"
-            value={values.address}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span className={styles.label}>Ciudad</span>
-          <input
-            className={styles.input}
-            disabled={isSubmitting}
-            name="city"
-            onChange={handleChange}
-            placeholder="Medellín"
-            value={values.city}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span className={styles.label}>Código postal</span>
-          <input
-            className={styles.input}
-            disabled={isSubmitting}
-            name="postalCode"
-            onChange={handleChange}
-            placeholder="050021"
-            value={values.postalCode}
-          />
         </label>
       </div>
 

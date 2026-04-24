@@ -13,8 +13,10 @@ function OrderCard({ order, onOpen }) {
     <article className={styles.card}>
       <div className={styles.header}>
         <div>
-          <p className={styles.orderId}>{order.id}</p>
-          <h3 className={styles.title}>{order.customer.fullName || 'Cliente registrado'}</h3>
+          <p className={styles.orderId}>{order.orderNumber || order.id}</p>
+          <h3 className={styles.title}>
+            {order.userFullName || order.customer.fullName || 'Cliente registrado'}
+          </h3>
           <p className={styles.meta}>{formattedDate}</p>
         </div>
         <span className={styles.total}>{formatCOP(order.totals.total)}</span>
@@ -22,16 +24,16 @@ function OrderCard({ order, onOpen }) {
 
       <div className={styles.summaryGrid}>
         <div className={styles.summaryItem}>
+          <span className={styles.label}>Estado</span>
+          <strong>{order.status}</strong>
+        </div>
+        <div className={styles.summaryItem}>
           <span className={styles.label}>Items</span>
           <strong>{totalItems}</strong>
         </div>
         <div className={styles.summaryItem}>
-          <span className={styles.label}>Envio</span>
-          <strong>{order.shippingMethod.label}</strong>
-        </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Pago</span>
-          <strong>{order.paymentMethod.label}</strong>
+          <span className={styles.label}>Cart ID</span>
+          <strong>{order.cartId || 'Sin cartId'}</strong>
         </div>
       </div>
 

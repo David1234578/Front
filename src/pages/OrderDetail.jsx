@@ -6,6 +6,19 @@ import orderService from '../services/orderService';
 import styles from '../styles/OrderDetail.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
+const formatAddressLines = (address) => {
+  if (!address) {
+    return [];
+  }
+
+  return [
+    address.line1,
+    address.line2,
+    [address.city, address.state].filter(Boolean).join(', '),
+    [address.country, address.postalCode].filter(Boolean).join(' - '),
+  ].filter(Boolean);
+};
+
 function OrderDetail() {
   const navigate = useNavigate();
   const { orderId } = useParams();
@@ -104,6 +117,8 @@ function OrderDetail() {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
+  const shippingAddressLines = formatAddressLines(order.shippingAddress);
+  const billingAddressLines = formatAddressLines(order.billingAddress);
 
   return (
     <section className={styles.container}>
@@ -137,19 +152,19 @@ function OrderDetail() {
       <div className={styles.summaryGrid}>
         <div className={styles.summaryCard}>
           <span className={styles.label}>Orden</span>
-          <strong>{order.id}</strong>
+          <strong>{order.orderNumber || order.id}</strong>
         </div>
         <div className={styles.summaryCard}>
           <span className={styles.label}>Fecha</span>
           <strong>{formattedDate}</strong>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.label}>Envio</span>
-          <strong>{order.shippingMethod.label}</strong>
+          <span className={styles.label}>Estado</span>
+          <strong>{order.status}</strong>
         </div>
         <div className={styles.summaryCard}>
-          <span className={styles.label}>Pago</span>
-          <strong>{order.paymentMethod.label}</strong>
+          <span className={styles.label}>Cart ID</span>
+          <strong>{order.cartId || 'Sin cartId'}</strong>
         </div>
       </div>
 
@@ -162,10 +177,12 @@ function OrderDetail() {
             </p>
             <p>{order.customer.email}</p>
             <p>{order.customer.phone}</p>
-            <p>{order.customer.address}</p>
-            <p>
-              {order.customer.city} - {order.customer.postalCode}
-            </p>
+            {shippingAddressLines.length === 0 ? <p>{order.customer.address}</p> : null}
+            {shippingAddressLines.length === 0 ? (
+              <p>
+                {order.customer.city} - {order.customer.postalCode}
+              </p>
+            ) : null}
           </div>
         </section>
 
@@ -190,6 +207,30 @@ function OrderDetail() {
             </div>
           </div>
         </section>
+
+        <section className={styles.card}>
+          <h2 className={styles.sectionTitle}>Direcciones</h2>
+          <div className={styles.infoList}>
+            <p>
+              <strong>Envío</strong>
+            </p>
+            {(shippingAddressLines.length > 0
+              ? shippingAddressLines
+              : ['Sin dirección de envío']
+            ).map((line) => (
+              <p key={`shipping-${line}`}>{line}</p>
+            ))}
+            <p>
+              <strong>Facturación</strong>
+            </p>
+            {(billingAddressLines.length > 0
+              ? billingAddressLines
+              : ['Sin dirección de facturación']
+            ).map((line) => (
+              <p key={`billing-${line}`}>{line}</p>
+            ))}
+          </div>
+        </section>
       </div>
 
       <section className={styles.card}>
@@ -201,9 +242,12 @@ function OrderDetail() {
               <div className={styles.itemContent}>
                 <h3 className={styles.itemName}>{item.name}</h3>
                 <p className={styles.itemMeta}>Categoria: {item.category}</p>
+                {item.sku ? <p className={styles.itemMeta}>SKU: {item.sku}</p> : null}
                 <p className={styles.itemMeta}>Cantidad: {item.quantity}</p>
               </div>
-              <strong className={styles.itemPrice}>{formatCOP(item.price * item.quantity)}</strong>
+              <strong className={styles.itemPrice}>
+                {formatCOP(item.lineTotal ?? (item.unitPrice ?? item.price) * item.quantity)}
+              </strong>
             </article>
           ))}
         </div>

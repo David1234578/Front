@@ -5,7 +5,7 @@ import useAuth from '../hooks/useAuth';
 import styles from '../styles/Navbar.module.css';
 
 function Navbar({ user, onSignOut, cartItemCount = 0 }) {
-  const userLabel = user?.name ?? 'Invitado';
+  const userLabel = user?.fullName ?? user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
   const isAdmin = user?.role === 'admin';
   const navigate = useNavigate();

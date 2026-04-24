@@ -12,7 +12,11 @@ function Home() {
     const bestByCategory = new Map();
 
     for (const product of productsState) {
-      const category = product.category ?? 'Sin categoría';
+      if (product.isActive === false) {
+        continue;
+      }
+
+      const category = product.categoryName ?? product.category ?? 'Sin categoría';
       const rating = Number(product.rating);
       const current = bestByCategory.get(category);
 

@@ -4,14 +4,20 @@ const DEFAULT_ROLE = 'user';
 const ADMIN_ROLE = 'admin';
 const DEFAULT_ADMIN_USER = {
   id: 'USR-ADMIN-001',
-  name: 'Admin CESDE',
+  firstName: 'Admin',
+  lastName: 'CESDE',
+  fullName: 'Admin CESDE',
   email: 'admin@cesde.local',
   password: 'Admin123!',
   role: ADMIN_ROLE,
   phone: '3000000000',
-  address: 'Campus principal',
-  city: 'Medellin',
-  postalCode: '050001',
+  status: 'ACTIVE',
+  createdAt: new Date().toISOString(),
+};
+
+const buildFullName = (firstName, lastName, fallback = '') => {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  return fullName || String(fallback ?? '').trim();
 };
 
 const normalizeRole = (role) => {
@@ -22,19 +28,27 @@ const normalizeRole = (role) => {
   return normalizedRole === ADMIN_ROLE ? ADMIN_ROLE : DEFAULT_ROLE;
 };
 
-const normalizeUser = (user) => ({
-  id: String(user?.id ?? ''),
-  name: String(user?.name ?? '').trim(),
-  email: String(user?.email ?? '')
-    .trim()
-    .toLowerCase(),
-  password: String(user?.password ?? ''),
-  role: normalizeRole(user?.role),
-  phone: String(user?.phone ?? '').trim(),
-  address: String(user?.address ?? '').trim(),
-  city: String(user?.city ?? '').trim(),
-  postalCode: String(user?.postalCode ?? '').trim(),
-});
+const normalizeUser = (user) => {
+  const firstName = String(user?.firstName ?? '').trim();
+  const lastName = String(user?.lastName ?? '').trim();
+  const fullName = buildFullName(firstName, lastName, user?.fullName ?? user?.name);
+
+  return {
+    id: String(user?.id ?? ''),
+    firstName,
+    lastName,
+    fullName,
+    name: fullName,
+    email: String(user?.email ?? '')
+      .trim()
+      .toLowerCase(),
+    password: String(user?.password ?? ''),
+    role: normalizeRole(user?.role),
+    phone: String(user?.phone ?? '').trim(),
+    status: String(user?.status ?? 'ACTIVE').trim() || 'ACTIVE',
+    createdAt: String(user?.createdAt ?? new Date().toISOString()),
+  };
+};
 
 const sanitizeSessionUser = (user) => {
   const normalizedUser = normalizeUser(user);
@@ -45,13 +59,15 @@ const sanitizeSessionUser = (user) => {
 
   return {
     id: normalizedUser.id,
+    firstName: normalizedUser.firstName,
+    lastName: normalizedUser.lastName,
+    fullName: normalizedUser.fullName,
     name: normalizedUser.name,
     email: normalizedUser.email,
     role: normalizedUser.role,
     phone: normalizedUser.phone,
-    address: normalizedUser.address,
-    city: normalizedUser.city,
-    postalCode: normalizedUser.postalCode,
+    status: normalizedUser.status,
+    createdAt: normalizedUser.createdAt,
   };
 };
 
@@ -76,7 +92,9 @@ const readStorageArray = (storageKey) => {
 
 const ensureAdminUser = (users) => {
   const normalizedUsers = Array.isArray(users)
-    ? users.map(normalizeUser).filter((user) => user.id && user.name && user.email && user.password)
+    ? users
+        .map(normalizeUser)
+        .filter((user) => user.id && user.fullName && user.email && user.password)
     : [];
 
   const hasAdmin = normalizedUsers.some((user) => user.role === ADMIN_ROLE);
@@ -119,6 +137,8 @@ export function createUser(userData) {
     ...userData,
     id: `USR-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     role: DEFAULT_ROLE,
+    status: 'ACTIVE',
+    createdAt: new Date().toISOString(),
   });
   const currentUsers = loadUsers();
 
@@ -185,6 +205,14 @@ export function saveSessionUser(user) {
   }
 
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sanitizedUser));
+}
+
+export function loadSessionToken() {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  return String(window.localStorage.getItem('authToken') ?? '');
 }
 
 export function clearSessionUser() {

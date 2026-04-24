@@ -7,11 +7,15 @@ function ProductCard({
   id,
   name,
   category,
+  categoryName,
   price,
   stock,
+  stockQty,
   image,
   description,
   rating,
+  isActive = true,
+  isAvailable = true,
   onAddToCart,
   onDetails,
   onEdit,
@@ -20,6 +24,10 @@ function ProductCard({
 }) {
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+  const productCategory = categoryName ?? category;
+  const productStock = Number.isFinite(Number(stockQty)) ? Number(stockQty) : stock;
+  const cannotAddToCart =
+    disableAddToCart || !isActive || !isAvailable || Number(productStock) <= 0;
 
   const handleLike = () => {
     if (isLiked) {
@@ -35,13 +43,13 @@ function ProductCard({
     <article className={styles.productCard}>
       <img src={image} alt={name} className={styles.productImage} />
       <div className={styles.productInfo}>
-        <span className={styles.productCategory}>{category}</span>
+        <span className={styles.productCategory}>{productCategory}</span>
         <h3 className={styles.productName}>{name}</h3>
         {Number.isFinite(Number(rating)) ? (
           <p className={styles.productRating}>Calificación: {Number(rating)}/5</p>
         ) : null}
         <p className={styles.productDescription}>{description}</p>
-        <p className={styles.productStock}>Stock: {stock}</p>
+        <p className={styles.productStock}>Stock: {productStock}</p>
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>{formatCOP(price)}</span>
           <button
@@ -58,10 +66,21 @@ function ProductCard({
               <button
                 type="button"
                 className={styles.btnAddToCart}
-                onClick={() => onAddToCart({ id, name, category, price, stock, image })}
-                disabled={disableAddToCart}
+                onClick={() =>
+                  onAddToCart({
+                    id,
+                    name,
+                    category: productCategory,
+                    categoryName: productCategory,
+                    price,
+                    stock: productStock,
+                    stockQty: productStock,
+                    image,
+                  })
+                }
+                disabled={cannotAddToCart}
               >
-                {disableAddToCart ? 'Stock agotado en carrito' : 'Agregar al carrito'}
+                {cannotAddToCart ? 'No disponible' : 'Agregar al carrito'}
               </button>
             ) : null}
 

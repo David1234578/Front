@@ -36,8 +36,8 @@ function ChangePasswordForm({
       nextErrors.currentPassword = 'Ingresa la contraseña actual.';
     }
 
-    if (!values.newPassword || values.newPassword.length < 6) {
-      nextErrors.newPassword = 'La nueva contraseña debe tener al menos 6 caracteres.';
+    if (!values.newPassword || values.newPassword.length < 8) {
+      nextErrors.newPassword = 'La nueva contraseña debe tener al menos 8 caracteres.';
     }
 
     if (
@@ -106,7 +106,7 @@ function ChangePasswordForm({
             disabled={isSubmitting}
             name="newPassword"
             onChange={handleChange}
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             type="password"
             value={values.newPassword}
           />

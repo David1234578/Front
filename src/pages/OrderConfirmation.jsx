@@ -3,6 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles/OrderConfirmation.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
+const formatAddressLines = (address) => {
+  if (!address) {
+    return [];
+  }
+
+  return [
+    address.line1,
+    address.line2,
+    [address.city, address.state].filter(Boolean).join(', '),
+    [address.country, address.postalCode].filter(Boolean).join(' - '),
+  ].filter(Boolean);
+};
+
 function OrderConfirmation({ order, onBackHome }) {
   const navigate = useNavigate();
 
@@ -35,6 +48,8 @@ function OrderConfirmation({ order, onBackHome }) {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
+  const shippingAddressLines = formatAddressLines(order.shippingAddress);
+  const billingAddressLines = formatAddressLines(order.billingAddress);
 
   return (
     <section className={styles.container}>
@@ -49,19 +64,19 @@ function OrderConfirmation({ order, onBackHome }) {
         <div className={styles.metaGrid}>
           <div className={styles.metaCard}>
             <span className={styles.metaLabel}>Orden</span>
-            <strong className={styles.metaValue}>{order.id}</strong>
+            <strong className={styles.metaValue}>{order.orderNumber || order.id}</strong>
           </div>
           <div className={styles.metaCard}>
             <span className={styles.metaLabel}>Fecha</span>
             <strong className={styles.metaValue}>{formattedDate}</strong>
           </div>
           <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Envío</span>
-            <strong className={styles.metaValue}>{order.shippingMethod.label}</strong>
+            <span className={styles.metaLabel}>Estado</span>
+            <strong className={styles.metaValue}>{order.status}</strong>
           </div>
           <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Pago</span>
-            <strong className={styles.metaValue}>{order.paymentMethod.label}</strong>
+            <span className={styles.metaLabel}>Cart ID</span>
+            <strong className={styles.metaValue}>{order.cartId || 'Sin cartId'}</strong>
           </div>
         </div>
 
@@ -74,10 +89,36 @@ function OrderConfirmation({ order, onBackHome }) {
               </p>
               <p>{order.customer.email}</p>
               <p>{order.customer.phone}</p>
-              <p>{order.customer.address}</p>
+              {shippingAddressLines.length === 0 ? <p>{order.customer.address}</p> : null}
+              {shippingAddressLines.length === 0 ? (
+                <p>
+                  {order.customer.city} - {order.customer.postalCode}
+                </p>
+              ) : null}
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Direcciones</h2>
+            <div className={styles.infoList}>
               <p>
-                {order.customer.city} - {order.customer.postalCode}
+                <strong>Envío</strong>
               </p>
+              {(shippingAddressLines.length > 0
+                ? shippingAddressLines
+                : ['Sin dirección de envío']
+              ).map((line) => (
+                <p key={`shipping-${line}`}>{line}</p>
+              ))}
+              <p>
+                <strong>Facturación</strong>
+              </p>
+              {(billingAddressLines.length > 0
+                ? billingAddressLines
+                : ['Sin dirección de facturación']
+              ).map((line) => (
+                <p key={`billing-${line}`}>{line}</p>
+              ))}
             </div>
           </section>
 
@@ -90,11 +131,11 @@ function OrderConfirmation({ order, onBackHome }) {
                   <div className={styles.itemContent}>
                     <h3 className={styles.itemName}>{item.name}</h3>
                     <p className={styles.itemMeta}>
-                      {item.quantity} x {formatCOP(item.price)}
+                      {item.quantity} x {formatCOP(item.unitPrice ?? item.price)}
                     </p>
                   </div>
                   <strong className={styles.itemPrice}>
-                    {formatCOP(item.quantity * item.price)}
+                    {formatCOP(item.lineTotal ?? item.quantity * (item.unitPrice ?? item.price))}
                   </strong>
                 </article>
               ))}

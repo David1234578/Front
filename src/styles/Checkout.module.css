@@ -72,6 +72,41 @@
   gap: 1rem;
 }
 
+.addressSelectionGrid,
+.addressPreviewGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.addressSelectionGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.addressPreviewGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.addressPreviewCard {
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.addressPreviewCard p {
+  margin: 0.25rem 0 0;
+  color: var(--gray-700);
+  font-weight: 700;
+}
+
+.previewTitle {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -254,6 +289,11 @@
   }
 
   .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .addressSelectionGrid,
+  .addressPreviewGrid {
     grid-template-columns: 1fr;
   }
 

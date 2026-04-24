@@ -11,8 +11,22 @@ import {
 
 import { requestJson } from './http';
 
-const MIN_PASSWORD_LENGTH = 6;
+const MIN_REGISTER_PASSWORD_LENGTH = 6;
+const MIN_CHANGE_PASSWORD_LENGTH = 8;
 const TOKEN_STORAGE_KEY = 'authToken';
+
+const normalizeRole = (role) => {
+  const normalizedRole = String(role ?? '')
+    .trim()
+    .toLowerCase();
+
+  return normalizedRole === 'admin' ? 'admin' : 'user';
+};
+
+const getFullName = (firstName, lastName, fallback = '') => {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  return fullName || String(fallback ?? '').trim();
+};
 
 const normalizeEmail = (email) =>
   String(email ?? '')
@@ -24,15 +38,21 @@ const toSessionUser = (user) => {
     return null;
   }
 
+  const firstName = String(user.firstName ?? '').trim();
+  const lastName = String(user.lastName ?? '').trim();
+  const fullName = getFullName(firstName, lastName, user.fullName ?? user.name);
+
   return {
     id: user.id,
-    name: user.name,
+    firstName,
+    lastName,
+    fullName,
+    name: fullName,
     email: user.email,
-    role: user.role,
-    phone: user.phone,
-    address: user.address,
-    city: user.city,
-    postalCode: user.postalCode,
+    role: normalizeRole(user.role),
+    phone: String(user.phone ?? '').trim(),
+    status: String(user.status ?? 'ACTIVE').trim() || 'ACTIVE',
+    createdAt: String(user.createdAt ?? ''),
   };
 };
 
@@ -78,26 +98,39 @@ const normalizeAuthResponse = (payload) => {
   }
 
   saveSessionUser(sessionUser);
-  saveSessionToken(payload?.token);
+  saveSessionToken(payload?.sessionToken ?? payload?.token);
 
-  return { ok: true, user: sessionUser, token: String(payload?.token ?? '') };
+  return {
+    ok: true,
+    user: sessionUser,
+    token: String(payload?.sessionToken ?? payload?.token ?? ''),
+    sessionId: String(payload?.sessionId ?? ''),
+    expiresAt: String(payload?.expiresAt ?? ''),
+    cart: payload?.cart ?? null,
+  };
 };
 
-function registerLocal({ name, email, password }) {
+function registerLocal({ firstName, lastName, email, password, phone }) {
   const normalizedEmail = normalizeEmail(email);
+  const normalizedFirstName = String(firstName ?? '').trim();
+  const normalizedLastName = String(lastName ?? '').trim();
 
-  if (!name?.trim()) {
-    return { ok: false, error: 'Ingresa un nombre para crear la cuenta.' };
+  if (!normalizedFirstName) {
+    return { ok: false, error: 'Ingresa el nombre para crear la cuenta.' };
+  }
+
+  if (!normalizedLastName) {
+    return { ok: false, error: 'Ingresa el apellido para crear la cuenta.' };
   }
 
   if (!normalizedEmail) {
     return { ok: false, error: 'Ingresa un correo electrónico válido.' };
   }
 
-  if (!password || password.length < MIN_PASSWORD_LENGTH) {
+  if (!password || password.length < MIN_REGISTER_PASSWORD_LENGTH) {
     return {
       ok: false,
-      error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+      error: `La contraseña debe tener al menos ${MIN_REGISTER_PASSWORD_LENGTH} caracteres.`,
     };
   }
 
@@ -105,7 +138,13 @@ function registerLocal({ name, email, password }) {
     return { ok: false, error: 'Ya existe una cuenta registrada con ese correo.' };
   }
 
-  const user = createUser({ name: name.trim(), email: normalizedEmail, password });
+  const user = createUser({
+    firstName: normalizedFirstName,
+    lastName: normalizedLastName,
+    email: normalizedEmail,
+    password,
+    phone,
+  });
   saveSessionUser(user);
 
   return { ok: true, user };
@@ -197,6 +236,21 @@ async function hydrateSession() {
 }
 
 async function logout() {
+  if (appConfig.useRemoteApi) {
+    try {
+      const token = loadSessionToken();
+
+      if (token) {
+        await requestJson('/auth/logout', {
+          method: 'POST',
+          token,
+        });
+      }
+    } catch {
+      // Clear local session even if remote logout fails.
+    }
+  }
+
   clearSessionUser();
   clearSessionToken();
 
@@ -219,15 +273,17 @@ async function updateProfile(userId, updates) {
   }
 
   const profileUpdates = {
-    name: String(updates?.name ?? '').trim(),
+    firstName: String(updates?.firstName ?? '').trim(),
+    lastName: String(updates?.lastName ?? '').trim(),
     phone: String(updates?.phone ?? '').trim(),
-    address: String(updates?.address ?? '').trim(),
-    city: String(updates?.city ?? '').trim(),
-    postalCode: String(updates?.postalCode ?? '').trim(),
   };
 
-  if (!profileUpdates.name) {
+  if (!profileUpdates.firstName) {
     return { ok: false, error: 'El nombre es obligatorio para actualizar el perfil.' };
+  }
+
+  if (!profileUpdates.lastName) {
+    return { ok: false, error: 'El apellido es obligatorio para actualizar el perfil.' };
   }
 
   if (!appConfig.useRemoteApi) {
@@ -242,8 +298,8 @@ async function updateProfile(userId, updates) {
 
   try {
     const token = loadSessionToken();
-    const response = await requestJson('/auth/profile', {
-      method: 'PATCH',
+    const response = await requestJson('/users/me', {
+      method: 'PUT',
       body: profileUpdates,
       token,
     });
@@ -276,10 +332,10 @@ async function changePassword(userId, currentPassword, newPassword) {
     return { ok: false, error: 'Debes ingresar la contraseña actual.' };
   }
 
-  if (!newPassword || newPassword.length < MIN_PASSWORD_LENGTH) {
+  if (!newPassword || newPassword.length < MIN_CHANGE_PASSWORD_LENGTH) {
     return {
       ok: false,
-      error: `La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+      error: `La nueva contraseña debe tener al menos ${MIN_CHANGE_PASSWORD_LENGTH} caracteres.`,
     };
   }
 
@@ -305,27 +361,14 @@ async function changePassword(userId, currentPassword, newPassword) {
 
   try {
     const token = loadSessionToken();
-    const response = await requestJson('/auth/change-password', {
-      method: 'POST',
+    await requestJson('/users/me/password', {
+      method: 'PUT',
       body: {
         currentPassword,
         newPassword,
       },
       token,
     });
-
-    if (response?.user) {
-      const normalizedResponse = normalizeAuthResponse({
-        ...response,
-        token: response.token ?? token,
-      });
-
-      if (!normalizedResponse.ok) {
-        return normalizedResponse;
-      }
-
-      return { ok: true, user: normalizedResponse.user };
-    }
 
     return { ok: true };
   } catch (error) {

@@ -2,10 +2,12 @@ import { useMemo, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
+import useCart from '../hooks/useCart';
 import productService from '../services/productService';
 import styles from '../styles/ProductList.module.css';
 
-function ProductList({ cartItems = [], onAddToCart }) {
+function ProductList() {
+  const { addToCart, cartItems } = useCart();
   const [productsState] = useState(productService.getProducts);
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -13,7 +15,10 @@ function ProductList({ cartItems = [], onAddToCart }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categories = useMemo(
-    () => Array.from(new Set(productsState.map((product) => product.category))).sort(),
+    () =>
+      Array.from(
+        new Set(productsState.map((product) => product.categoryName ?? product.category))
+      ).sort(),
     [productsState]
   );
 
@@ -26,14 +31,20 @@ function ProductList({ cartItems = [], onAddToCart }) {
     const normalizedQuery = query.trim().toLowerCase();
 
     return productsState.filter((product) => {
-      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      if (product.isActive === false) {
+        return false;
+      }
+
+      const productCategory = product.categoryName ?? product.category;
+      const productStock = Number(product.stockQty ?? product.stock ?? 0);
+      const matchesCategory = selectedCategory === 'all' || productCategory === selectedCategory;
       const matchesQuery =
         !normalizedQuery ||
         String(product.name ?? '')
           .toLowerCase()
           .includes(normalizedQuery);
 
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesQuery && (product.isAvailable ?? productStock > 0);
     });
   }, [productsState, query, selectedCategory]);
 
@@ -94,14 +105,18 @@ function ProductList({ cartItems = [], onAddToCart }) {
               id={product.id}
               name={product.name}
               category={product.category}
+              categoryName={product.categoryName}
               price={product.price}
               rating={product.rating}
               stock={product.stock}
+              stockQty={product.stockQty}
+              isActive={product.isActive}
+              isAvailable={product.isAvailable}
               image={product.image}
               description={product.description}
-              onAddToCart={onAddToCart}
+              onAddToCart={addToCart}
               onDetails={() => handleOpenDetails(product)}
-              disableAddToCart={(cartQuantityByProductId.get(product.id) ?? 0) >= product.stock}
+              disableAddToCart={(cartQuantityByProductId.get(product.id) ?? 0) >= product.stockQty}
             />
           ))}
         </div>
