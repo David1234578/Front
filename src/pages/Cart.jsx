@@ -1,9 +1,17 @@
 import styles from '../styles/Cart.module.css';
+import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
 
-function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart, onContinueShopping }) {
+function Cart({
+  cartItems,
+  onUpdateQuantity,
+  onRemoveItem,
+  onClearCart,
+  onContinueShopping,
+  onProceedToCheckout,
+}) {
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const subtotal = calculateCartSubtotal(cartItems);
 
   if (cartItems.length === 0) {
     return (
@@ -125,6 +133,10 @@ function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart, onContin
 
           <button type="button" className={styles.btnClear} onClick={onClearCart}>
             Vaciar carrito
+          </button>
+
+          <button type="button" className={styles.btnCheckout} onClick={onProceedToCheckout}>
+            Proceder al checkout
           </button>
         </aside>
       </div>

@@ -4,9 +4,17 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import Cart from './pages/Cart';
 import CategoryProducts from './pages/CategoryProducts';
+import Checkout from './pages/Checkout';
 import Home from './pages/Home';
+import OrderConfirmation from './pages/OrderConfirmation';
 import ProductList from './pages/ProductList';
+import {
+  calculateOrderTotals,
+  getPaymentMethodById,
+  getShippingOptionById,
+} from './utils/calculateOrderTotals';
 import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
+import { saveOrder } from './utils/ordersStorage';
 
 import './App.css';
 
@@ -15,6 +23,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [cartItems, setCartItems] = useState(loadCartItems);
+  const [latestOrder, setLatestOrder] = useState(null);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
@@ -106,37 +115,80 @@ function App() {
     setCartItems([]);
   };
 
+  const handleStartCheckout = () => {
+    setActivePage('checkout');
+  };
+
+  const handleCompleteCheckout = ({ customer, shippingMethodId, paymentMethodId }) => {
+    if (cartItems.length === 0) {
+      setActivePage('cart');
+      return;
+    }
+
+    const totals = calculateOrderTotals(cartItems, shippingMethodId);
+    const order = {
+      id: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+      items: cartItems.map((item) => ({ ...item })),
+      customer,
+      shippingMethod: getShippingOptionById(shippingMethodId),
+      paymentMethod: getPaymentMethodById(paymentMethodId),
+      totals,
+    };
+
+    saveOrder(order);
+    setLatestOrder(order);
+    setCartItems([]);
+    setActivePage('order-confirmation');
+  };
+
+  const handleBackHomeAfterOrder = () => {
+    setLatestOrder(null);
+    setSelectedCategory(null);
+    setActivePage('home');
+  };
+
   const cartItemCount = useMemo(
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
     [cartItems]
   );
 
-  const page = useMemo(() => {
-    if (activePage === 'category') {
-      return (
-        <CategoryProducts
-          category={selectedCategory}
-          onBack={handleBackFromCategory}
-          cartItems={cartItems}
-          onAddToCart={handleAddToCart}
-        />
-      );
-    }
-    if (activePage === 'products') return <ProductList />;
-    if (activePage === 'cart') {
-      return (
-        <Cart
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateCartItemQuantity}
-          onRemoveItem={handleRemoveCartItem}
-          onClearCart={handleClearCart}
-          onContinueShopping={() => setActivePage('home')}
-        />
-      );
-    }
+  let page = <Home onOpenCategory={handleOpenCategory} />;
 
-    return <Home onOpenCategory={handleOpenCategory} />;
-  }, [activePage, cartItems, selectedCategory]);
+  if (activePage === 'category') {
+    page = (
+      <CategoryProducts
+        category={selectedCategory}
+        onBack={handleBackFromCategory}
+        cartItems={cartItems}
+        onAddToCart={handleAddToCart}
+      />
+    );
+  } else if (activePage === 'products') {
+    page = <ProductList />;
+  } else if (activePage === 'cart') {
+    page = (
+      <Cart
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateCartItemQuantity}
+        onRemoveItem={handleRemoveCartItem}
+        onClearCart={handleClearCart}
+        onContinueShopping={() => setActivePage('home')}
+        onProceedToCheckout={handleStartCheckout}
+      />
+    );
+  } else if (activePage === 'checkout') {
+    page = (
+      <Checkout
+        cartItems={cartItems}
+        user={user}
+        onBack={() => setActivePage('cart')}
+        onCompleteCheckout={handleCompleteCheckout}
+      />
+    );
+  } else if (activePage === 'order-confirmation') {
+    page = <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />;
+  }
 
   const handleSignIn = () => {
     setUser({ name: 'Usuario' });
