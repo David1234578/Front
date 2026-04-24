@@ -33,13 +33,13 @@
 }
 
 .link {
-  border: none;
   background: transparent;
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   font-weight: 700;
   color: var(--gray-900);
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;

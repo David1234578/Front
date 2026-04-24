@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -19,33 +20,13 @@ import { saveOrder } from './utils/ordersStorage';
 import './App.css';
 
 function App() {
-  const [activePage, setActivePage] = useState('home');
   const [user, setUser] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
   const [cartItems, setCartItems] = useState(loadCartItems);
   const [latestOrder, setLatestOrder] = useState(null);
 
   useEffect(() => {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
-
-  const handleNavigate = (page) => {
-    setActivePage(page);
-
-    if (page !== 'category') {
-      setSelectedCategory(null);
-    }
-  };
-
-  const handleOpenCategory = (category) => {
-    setSelectedCategory(category);
-    setActivePage('category');
-  };
-
-  const handleBackFromCategory = () => {
-    setSelectedCategory(null);
-    setActivePage('home');
-  };
 
   const handleAddToCart = (product) => {
     if (!product || !Number.isFinite(Number(product.id))) {
@@ -115,14 +96,9 @@ function App() {
     setCartItems([]);
   };
 
-  const handleStartCheckout = () => {
-    setActivePage('checkout');
-  };
-
   const handleCompleteCheckout = ({ customer, shippingMethodId, paymentMethodId }) => {
     if (cartItems.length === 0) {
-      setActivePage('cart');
-      return;
+      return null;
     }
 
     const totals = calculateOrderTotals(cartItems, shippingMethodId);
@@ -139,56 +115,17 @@ function App() {
     saveOrder(order);
     setLatestOrder(order);
     setCartItems([]);
-    setActivePage('order-confirmation');
+    return order;
   };
 
   const handleBackHomeAfterOrder = () => {
     setLatestOrder(null);
-    setSelectedCategory(null);
-    setActivePage('home');
   };
 
   const cartItemCount = useMemo(
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
     [cartItems]
   );
-
-  let page = <Home onOpenCategory={handleOpenCategory} />;
-
-  if (activePage === 'category') {
-    page = (
-      <CategoryProducts
-        category={selectedCategory}
-        onBack={handleBackFromCategory}
-        cartItems={cartItems}
-        onAddToCart={handleAddToCart}
-      />
-    );
-  } else if (activePage === 'products') {
-    page = <ProductList />;
-  } else if (activePage === 'cart') {
-    page = (
-      <Cart
-        cartItems={cartItems}
-        onUpdateQuantity={handleUpdateCartItemQuantity}
-        onRemoveItem={handleRemoveCartItem}
-        onClearCart={handleClearCart}
-        onContinueShopping={() => setActivePage('home')}
-        onProceedToCheckout={handleStartCheckout}
-      />
-    );
-  } else if (activePage === 'checkout') {
-    page = (
-      <Checkout
-        cartItems={cartItems}
-        user={user}
-        onBack={() => setActivePage('cart')}
-        onCompleteCheckout={handleCompleteCheckout}
-      />
-    );
-  } else if (activePage === 'order-confirmation') {
-    page = <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />;
-  }
 
   const handleSignIn = () => {
     setUser({ name: 'Usuario' });
@@ -201,15 +138,50 @@ function App() {
   return (
     <div className="app">
       <Header
-        activePage={activePage}
-        onNavigate={handleNavigate}
         user={user}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
         cartItemCount={cartItemCount}
       />
 
-      <main className="main">{page}</main>
+      <main className="main">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/category/:categoryName"
+            element={<CategoryProducts cartItems={cartItems} onAddToCart={handleAddToCart} />}
+          />
+          <Route path="/products" element={<ProductList />} />
+          <Route
+            path="/cart"
+            element={
+              <Cart
+                cartItems={cartItems}
+                onUpdateQuantity={handleUpdateCartItemQuantity}
+                onRemoveItem={handleRemoveCartItem}
+                onClearCart={handleClearCart}
+              />
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <Checkout
+                cartItems={cartItems}
+                user={user}
+                onCompleteCheckout={handleCompleteCheckout}
+              />
+            }
+          />
+          <Route
+            path="/order-confirmation"
+            element={
+              <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
 
       <Footer />
     </div>

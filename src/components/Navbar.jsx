@@ -1,9 +1,18 @@
+import { NavLink, useLocation } from 'react-router-dom';
+
 import logo from '../assets/img-logos/logo-Cesde-2023.svg';
 import styles from '../styles/Navbar.module.css';
 
-function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut, cartItemCount = 0 }) {
+function Navbar({ user, onSignIn, onSignOut, cartItemCount = 0 }) {
   const userLabel = user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
+  const location = useLocation();
+
+  const isHomeActive = location.pathname === '/' || location.pathname.startsWith('/category/');
+  const isCartActive =
+    location.pathname === '/cart' ||
+    location.pathname === '/checkout' ||
+    location.pathname === '/order-confirmation';
 
   return (
     <nav className={styles.navbar}>
@@ -13,28 +22,19 @@ function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut, cartItemCou
       </div>
 
       <div className={styles.links}>
-        <button
-          type="button"
-          className={`${styles.link} ${activePage === 'home' ? styles.active : ''}`}
-          onClick={() => onNavigate('home')}
-        >
+        <NavLink to="/" end className={() => `${styles.link} ${isHomeActive ? styles.active : ''}`}>
           Inicio
-        </button>
-        <button
-          type="button"
-          className={`${styles.link} ${activePage === 'products' ? styles.active : ''}`}
-          onClick={() => onNavigate('products')}
+        </NavLink>
+        <NavLink
+          to="/products"
+          className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ''}`}
         >
           Productos
-        </button>
-        <button
-          type="button"
-          className={`${styles.link} ${activePage === 'cart' ? styles.active : ''}`}
-          onClick={() => onNavigate('cart')}
-        >
+        </NavLink>
+        <NavLink to="/cart" className={() => `${styles.link} ${isCartActive ? styles.active : ''}`}>
           Carrito
           {cartItemCount > 0 ? <span className={styles.cartBadge}>{cartItemCount}</span> : null}
-        </button>
+        </NavLink>
       </div>
 
       <div className={styles.auth}>

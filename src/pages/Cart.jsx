@@ -1,17 +1,13 @@
+import { useNavigate } from 'react-router-dom';
+
 import styles from '../styles/Cart.module.css';
 import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
 
-function Cart({
-  cartItems,
-  onUpdateQuantity,
-  onRemoveItem,
-  onClearCart,
-  onContinueShopping,
-  onProceedToCheckout,
-}) {
+function Cart({ cartItems, onUpdateQuantity, onRemoveItem, onClearCart }) {
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const subtotal = calculateCartSubtotal(cartItems);
+  const navigate = useNavigate();
 
   if (cartItems.length === 0) {
     return (
@@ -22,7 +18,7 @@ function Cart({
             <p className={styles.subtitle}>Todavía no tienes productos agregados.</p>
           </div>
 
-          <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+          <button type="button" className={styles.btnContinue} onClick={() => navigate('/')}>
             Seguir comprando
           </button>
         </div>
@@ -32,7 +28,7 @@ function Cart({
           <p className={styles.emptyText}>
             Vuelve al catálogo, entra a una categoría y agrega productos para continuar.
           </p>
-          <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+          <button type="button" className={styles.btnContinue} onClick={() => navigate('/')}>
             Ir al inicio
           </button>
         </div>
@@ -50,7 +46,7 @@ function Cart({
           </p>
         </div>
 
-        <button type="button" className={styles.btnContinue} onClick={onContinueShopping}>
+        <button type="button" className={styles.btnContinue} onClick={() => navigate('/')}>
           Seguir comprando
         </button>
       </div>
@@ -135,7 +131,11 @@ function Cart({
             Vaciar carrito
           </button>
 
-          <button type="button" className={styles.btnCheckout} onClick={onProceedToCheckout}>
+          <button
+            type="button"
+            className={styles.btnCheckout}
+            onClick={() => navigate('/checkout')}
+          >
             Proceder al checkout
           </button>
         </aside>
