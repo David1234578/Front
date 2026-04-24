@@ -114,6 +114,7 @@
 }
 
 .btnEdit,
+.btnAddToCart,
 .btnDetails,
 .btnDelete {
   border: none;
@@ -131,6 +132,20 @@
 
 .btnDetails:hover {
   background: var(--gray-200);
+}
+
+.btnAddToCart {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.btnAddToCart:hover:not(:disabled) {
+  background: #a7f3d0;
+}
+
+.btnAddToCart:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btnEdit {

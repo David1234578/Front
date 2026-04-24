@@ -40,6 +40,9 @@
   border-radius: 8px;
   font-weight: 700;
   color: var(--gray-900);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .link:hover {
@@ -74,6 +77,20 @@
 
 .authBtn:hover {
   background: var(--primary-dark);
+}
+
+.cartBadge {
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 768px) {

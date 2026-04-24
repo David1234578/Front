@@ -1,7 +1,7 @@
 import logo from '../assets/img-logos/logo-Cesde-2023.svg';
 import styles from '../styles/Navbar.module.css';
 
-function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut }) {
+function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut, cartItemCount = 0 }) {
   const userLabel = user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
 
@@ -33,6 +33,7 @@ function Navbar({ activePage, onNavigate, user, onSignIn, onSignOut }) {
           onClick={() => onNavigate('cart')}
         >
           Carrito
+          {cartItemCount > 0 ? <span className={styles.cartBadge}>{cartItemCount}</span> : null}
         </button>
       </div>
 
