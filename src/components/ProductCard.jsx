@@ -3,7 +3,7 @@ import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
-function ProductCard({ name, category, price, image, description }) {
+function ProductCard({ name, category, price, stock, image, description, onEdit, onDelete }) {
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -24,6 +24,7 @@ function ProductCard({ name, category, price, image, description }) {
         <span className={styles.productCategory}>{category}</span>
         <h3 className={styles.productName}>{name}</h3>
         <p className={styles.productDescription}>{description}</p>
+        <p className={styles.productStock}>Stock: {stock}</p>
         <div className={styles.productFooter}>
           <span className={styles.productPrice}>{formatCOP(price)}</span>
           <button
@@ -33,6 +34,22 @@ function ProductCard({ name, category, price, image, description }) {
             {isLiked ? '❤️' : '🤍'} {likes} Me gusta
           </button>
         </div>
+
+        {onEdit || onDelete ? (
+          <div className={styles.cardActions}>
+            {onEdit ? (
+              <button type="button" className={styles.btnEdit} onClick={onEdit}>
+                Editar
+              </button>
+            ) : null}
+
+            {onDelete ? (
+              <button type="button" className={styles.btnDelete} onClick={onDelete}>
+                Eliminar
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </article>
   );
