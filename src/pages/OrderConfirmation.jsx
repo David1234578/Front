@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import OptionalImage from '../components/OptionalImage';
 import { appConfig } from '../config';
 import styles from '../styles/OrderConfirmation.module.css';
 import { formatCOP } from '../utils/formatCOP';
@@ -50,6 +51,7 @@ function OrderConfirmation({ order, onBackHome }) {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
+  const hasCartId = Boolean(String(order.cartId ?? '').trim());
   const shippingAddressLines = formatAddressLines(order.shippingAddress);
   const billingAddressLines = formatAddressLines(order.billingAddress);
 
@@ -77,10 +79,12 @@ function OrderConfirmation({ order, onBackHome }) {
             <span className={styles.metaLabel}>Estado</span>
             <strong className={styles.metaValue}>{order.status}</strong>
           </div>
-          <div className={styles.metaCard}>
-            <span className={styles.metaLabel}>Cart ID</span>
-            <strong className={styles.metaValue}>{order.cartId || 'Sin cartId'}</strong>
-          </div>
+          {hasCartId ? (
+            <div className={styles.metaCard}>
+              <span className={styles.metaLabel}>Cart ID</span>
+              <strong className={styles.metaValue}>{order.cartId}</strong>
+            </div>
+          ) : null}
         </div>
 
         <div className={styles.layout}>
@@ -130,7 +134,7 @@ function OrderConfirmation({ order, onBackHome }) {
             <div className={styles.itemList}>
               {order.items.map((item) => (
                 <article key={item.id} className={styles.item}>
-                  <img className={styles.itemImage} src={item.image} alt={item.name} />
+                  <OptionalImage className={styles.itemImage} src={item.image} alt={item.name} />
                   <div className={styles.itemContent}>
                     <h3 className={styles.itemName}>{item.name}</h3>
                     <p className={styles.itemMeta}>

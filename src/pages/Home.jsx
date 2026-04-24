@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import OptionalImage from '../components/OptionalImage';
 import categoryService from '../services/categoryService';
 import productService from '../services/productService';
 import homeStyles from '../styles/Home.module.css';
@@ -96,7 +97,6 @@ function Home() {
       })
       .filter(Boolean);
   }, [categoriesState, productsState]);
-
   return (
     <div className={homeStyles.container}>
       <header className={homeStyles.header}>
@@ -118,7 +118,11 @@ function Home() {
             }
             aria-label={`Ver productos de ${category.name}`}
           >
-            <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />
+            <OptionalImage
+              className={homeStyles.categoryImage}
+              src={product.image}
+              alt={product.name}
+            />
             <span className={homeStyles.categoryLabel} aria-hidden="true">
               <span className={homeStyles.categoryLabelText}>{category.name}</span>
             </span>

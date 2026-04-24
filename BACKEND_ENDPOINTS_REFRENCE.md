@@ -61,6 +61,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - `expiresAt`
 - `user = null`
 - `cart` guest inicial
+- el objeto `cart` sigue el mismo contrato de la sección `# 5. Cart`, incluyendo `items[*].image`
 
 ---
 
@@ -76,6 +77,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - `expiresAt`
 - `user`
 - `cart`
+- el objeto `cart` sigue el mismo contrato de la sección `# 5. Cart`, incluyendo `items[*].image`
 
 ### Body
 ```json
@@ -107,6 +109,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - `expiresAt`
 - `user`
 - `cart`
+- el objeto `cart` sigue el mismo contrato de la sección `# 5. Cart`, incluyendo `items[*].image`
 
 ### Body
 ```json
@@ -305,6 +308,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - si `search` viene informado, se filtra por nombre
 - si `categoryId` viene informado, se filtra por categoría
 - `activeOnly=true` excluye productos inactivos
+- `image` representa la URL pública de la imagen principal del producto y puede venir en `null` si el producto no la tiene cargada
 
 ## 3.2 Obtener producto por ID
 - **GET** `/api/v1/products/{id}`
@@ -321,6 +325,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
   "sku": "MOU-001",
   "name": "Mouse Gamer",
   "description": "Mouse Gamer descripcion de prueba",
+  "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=80",
   "price": 89.90,
   "stockQty": 20,
   "isActive": true,
@@ -468,6 +473,9 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - si el merge supera el stock disponible: `409 INSUFFICIENT_STOCK`
 
 ### Shape de carrito
+- cada item expone `image` con la imagen principal actual del producto relacionado
+- `image` puede venir en `null` si el producto no tiene imagen cargada
+
 ```json
 {
   "id": 22,
@@ -483,6 +491,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
       "productId": 101,
       "sku": "MOU-001",
       "name": "Mouse Gamer",
+      "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=80",
       "quantity": 2,
       "unitPrice": 89.90,
       "lineTotal": 179.80,
@@ -525,6 +534,10 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - **GET** `/api/v1/orders/{id}`
 - **Auth requerida:** sí
 - **Response:** `200 OK`
+
+### Regla de items de orden
+- cada item expone `image` con la imagen principal actual del producto relacionado
+- `image` puede venir en `null` si el producto no tiene imagen cargada
 
 ### Body checkout
 ```json
@@ -573,7 +586,8 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
       "id": 1,
       "productId": 101,
       "sku": "MOU-001",
-      "name": "Mouse Gamer",
+      "productName": "Mouse Gamer",
+      "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=80",
       "quantity": 2,
       "unitPrice": 89.90,
       "lineTotal": 179.80
@@ -626,9 +640,145 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
   "sku": "MOU-001",
   "name": "Mouse Gamer",
   "description": "Mouse Gamer descripcion de prueba",
+  "image": "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=80",
   "price": 89.90,
   "stockQty": 20,
   "isActive": true
+}
+```
+
+### Reglas crear/actualizar producto
+- `image` es opcional
+- cuando se informa `image`, el backend la persiste y la devuelve en `POST`, `PUT`, `GET /api/v1/products` y `GET /api/v1/products/{id}`
+
+---
+
+# 8. Admin Users
+
+> En `etapa15`, estos endpoints requieren usuario autenticado con rol `ADMIN`.
+
+## 8.1 Crear usuario
+- **POST** `/api/v1/admin/users`
+- **Auth requerida:** sí
+- **Rol requerido:** `ADMIN`
+- **Body:** JSON
+- **Response:** `201 Created`
+- **Errores relevantes:** `400 Validation Error`, `401 Unauthorized`, `403 Forbidden`, `409 Duplicate Resource`
+
+### Body crear usuario
+```json
+{
+  "email": "new.user@cesde.edu.co",
+  "password": "secret123",
+  "firstName": "Nuevo",
+  "lastName": "Usuario",
+  "phone": "3001234567",
+  "role": "CUSTOMER",
+  "status": "ACTIVE"
+}
+```
+
+### Reglas crear usuario
+- `password` es obligatoria solo en creación
+- `role` acepta `ADMIN` o `CUSTOMER`
+- `status` acepta `ACTIVE` o `INACTIVE`
+- `email` debe ser único
+
+## 8.2 Listar usuarios
+- **GET** `/api/v1/admin/users`
+- **Auth requerida:** sí
+- **Rol requerido:** `ADMIN`
+- **Body:** no
+- **Response:** `200 OK`
+- **Errores relevantes:** `401 Unauthorized`, `403 Forbidden`
+
+### Response listar usuarios
+```json
+[
+  {
+    "id": 1,
+    "email": "admin.demo@pps.com",
+    "firstName": "Admin",
+    "lastName": "Demo",
+    "fullName": "Admin Demo",
+    "role": "ADMIN",
+    "phone": "3000000001",
+    "status": "ACTIVE",
+    "createdAt": "2026-04-05T14:30:00"
+  },
+  {
+    "id": 2,
+    "email": "customer.demo@pps.com",
+    "firstName": "Customer",
+    "lastName": "Demo",
+    "fullName": "Customer Demo",
+    "role": "CUSTOMER",
+    "phone": "3000000002",
+    "status": "INACTIVE",
+    "createdAt": "2026-04-05T14:35:00"
+  }
+]
+```
+
+## 8.3 Obtener usuario por ID
+- **GET** `/api/v1/admin/users/{id}`
+- **Auth requerida:** sí
+- **Rol requerido:** `ADMIN`
+- **Body:** no
+- **Response:** `200 OK`
+- **Errores relevantes:** `401 Unauthorized`, `403 Forbidden`, `404 Resource Not Found`
+
+## 8.4 Actualizar usuario
+- **PUT** `/api/v1/admin/users/{id}`
+- **Auth requerida:** sí
+- **Rol requerido:** `ADMIN`
+- **Body:** JSON
+- **Response:** `200 OK`
+- **Errores relevantes:** `400 Validation Error`, `401 Unauthorized`, `403 Forbidden`, `404 Resource Not Found`, `409 Duplicate Resource`
+
+### Body actualizar usuario
+```json
+{
+  "email": "updated.user@cesde.edu.co",
+  "firstName": "Usuario",
+  "lastName": "Actualizado",
+  "phone": "3017654321",
+  "role": "ADMIN",
+  "status": "ACTIVE"
+}
+```
+
+### Reglas actualizar usuario
+- este CRUD no cambia contraseña
+- `role` acepta `ADMIN` o `CUSTOMER`
+- `status` acepta `ACTIVE` o `INACTIVE`
+- si se cambia `email`, debe seguir siendo único
+
+## 8.5 Eliminar usuario
+- **DELETE** `/api/v1/admin/users/{id}`
+- **Auth requerida:** sí
+- **Rol requerido:** `ADMIN`
+- **Body:** no
+- **Response:** `204 No Content`
+- **Errores relevantes:** `401 Unauthorized`, `403 Forbidden`, `404 Resource Not Found`
+
+### Regla eliminar usuario
+- el delete es **baja lógica**: el usuario no se borra físicamente
+- el backend cambia `status` a `INACTIVE`
+- un usuario `INACTIVE` no puede iniciar sesión
+
+### Shape de usuario admin
+```json
+{
+  "id": 3,
+  "email": "updated.user@cesde.edu.co",
+  "firstName": "Usuario",
+  "lastName": "Actualizado",
+  "fullName": "Usuario Actualizado",
+  "role": "ADMIN",
+  "phone": "3017654321",
+  "status": "ACTIVE",
+  "createdAt": "2026-04-05T15:00:00"
 }
 ```
 
@@ -648,6 +798,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 10. consultar detalle de orden
 11. consultar catálogo público
 12. crear/editar/desactivar productos
+13. crear/listar/editar/desactivar usuarios desde admin
 
 ---
 

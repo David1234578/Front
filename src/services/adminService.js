@@ -6,20 +6,21 @@ function getDashboardSnapshot() {
   return {
     products: productService.getProducts(),
     orders: orderService.getOrders(),
-    users: authService.listUsers(),
+    users: authService.getAdminUsers(),
   };
 }
 
 async function getDashboardSnapshotAsync() {
-  const [products, orders] = await Promise.all([
+  const [products, orders, users] = await Promise.all([
     productService.getProductsAsync(),
     orderService.getOrdersAsync(),
+    authService.getAdminUsersAsync(),
   ]);
 
   return {
     products,
     orders,
-    users: authService.listUsers(),
+    users,
   };
 }
 

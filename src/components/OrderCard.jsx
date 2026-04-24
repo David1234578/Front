@@ -8,6 +8,7 @@ function OrderCard({ order, onOpen }) {
   });
 
   const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const hasCartId = Boolean(String(order.cartId ?? '').trim());
 
   return (
     <article className={styles.card}>
@@ -31,10 +32,12 @@ function OrderCard({ order, onOpen }) {
           <span className={styles.label}>Items</span>
           <strong>{totalItems}</strong>
         </div>
-        <div className={styles.summaryItem}>
-          <span className={styles.label}>Cart ID</span>
-          <strong>{order.cartId || 'Sin cartId'}</strong>
-        </div>
+        {hasCartId ? (
+          <div className={styles.summaryItem}>
+            <span className={styles.label}>Cart ID</span>
+            <strong>{order.cartId}</strong>
+          </div>
+        ) : null}
       </div>
 
       <div className={styles.actions}>

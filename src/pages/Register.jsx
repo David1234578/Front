@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { appConfig } from '../config';
 import useAuth from '../hooks/useAuth';
+import useCart from '../hooks/useCart';
 import cartService from '../services/cartService';
 import styles from '../styles/AuthPage.module.css';
 
@@ -17,6 +18,7 @@ function Register() {
   });
   const [formError, setFormError] = useState('');
   const { authError, clearAuthError, isSubmittingAuth, register } = useAuth();
+  const { cart, cartError, cartHydrationStatus, isCartReady } = useCart();
   const navigate = useNavigate();
   const isRemoteMode = appConfig.useRemoteApi;
 
@@ -30,10 +32,24 @@ function Register() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const guestCartId = String(cartService.getCart()?.id ?? '').trim();
-
     if (values.password !== values.confirmPassword) {
       setFormError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (isRemoteMode && !isCartReady) {
+      setFormError(
+        cartHydrationStatus === 'error'
+          ? cartError || 'No fue posible preparar el carrito para crear la cuenta.'
+          : 'Preparando el carrito antes de crear la cuenta.'
+      );
+      return;
+    }
+
+    const guestCartId = cartService.getGuestCartIdForAuth(cart);
+
+    if (isRemoteMode && !guestCartId) {
+      setFormError('No fue posible preparar un carrito invitado válido para crear la cuenta.');
       return;
     }
 
@@ -54,6 +70,14 @@ function Register() {
     navigate('/user/profile', { replace: true });
   };
 
+  const submitDisabled = isSubmittingAuth || (isRemoteMode && !isCartReady);
+  const blockedMessage =
+    isRemoteMode && !isCartReady
+      ? cartHydrationStatus === 'error'
+        ? cartError || 'No fue posible preparar el carrito para crear la cuenta.'
+        : 'Preparando carrito para conservar tus productos antes de autenticarte...'
+      : '';
+
   return (
     <section className={styles.container}>
       <div className={styles.card}>
@@ -70,7 +94,7 @@ function Register() {
             <span className={styles.label}>Nombre</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="firstName"
               value={values.firstName}
               onChange={handleChange}
@@ -82,7 +106,7 @@ function Register() {
             <span className={styles.label}>Apellido</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="lastName"
               value={values.lastName}
               onChange={handleChange}
@@ -94,7 +118,7 @@ function Register() {
             <span className={styles.label}>Correo electrónico</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="email"
               value={values.email}
               onChange={handleChange}
@@ -107,7 +131,7 @@ function Register() {
             <span className={styles.label}>Teléfono</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="phone"
               value={values.phone}
               onChange={handleChange}
@@ -119,7 +143,7 @@ function Register() {
             <span className={styles.label}>Contraseña</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="password"
               value={values.password}
               onChange={handleChange}
@@ -132,7 +156,7 @@ function Register() {
             <span className={styles.label}>Confirmar contraseña</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="confirmPassword"
               value={values.confirmPassword}
               onChange={handleChange}
@@ -141,9 +165,11 @@ function Register() {
             />
           </label>
 
-          {formError || authError ? <p className={styles.error}>{formError || authError}</p> : null}
+          {formError || authError || blockedMessage ? (
+            <p className={styles.error}>{formError || authError || blockedMessage}</p>
+          ) : null}
 
-          <button type="submit" className={styles.primaryButton} disabled={isSubmittingAuth}>
+          <button type="submit" className={styles.primaryButton} disabled={submitDisabled}>
             {isSubmittingAuth ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
         </form>

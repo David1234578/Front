@@ -3,21 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { appConfig } from '../config';
 import useAuth from '../hooks/useAuth';
+import useCart from '../hooks/useCart';
 import cartService from '../services/cartService';
 import styles from '../styles/AuthPage.module.css';
 import { DEFAULT_ADMIN_USER } from '../utils/authStorage';
-
-const REMOTE_DEMO_CREDENTIALS = {
-  admin: {
-    email: 'admin.demo@pps.com',
-    password: 'Admin12345*',
-  },
-  customer: {
-    email: 'customer.demo@pps.com',
-    password: 'Customer12345*',
-  },
-  guestToken: 'demo-guest-session-token',
-};
 
 const fillDemoCredentials = (setValues, credentials) => {
   setValues({
@@ -30,9 +19,18 @@ function Login() {
   const [values, setValues] = useState({ email: '', password: '' });
   const [formError, setFormError] = useState('');
   const { authError, clearAuthError, isSubmittingAuth, login } = useAuth();
+  const { cart, cartError, cartHydrationStatus, isCartReady } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const isRemoteMode = appConfig.useRemoteApi;
+  const remoteDemoCredentials = appConfig.remoteDemoCredentials;
+  const shouldShowRemoteDemoCredentials =
+    isRemoteMode &&
+    appConfig.showRemoteDemoCredentials &&
+    remoteDemoCredentials.admin.email &&
+    remoteDemoCredentials.admin.password &&
+    remoteDemoCredentials.customer.email &&
+    remoteDemoCredentials.customer.password;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -44,7 +42,21 @@ function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const guestCartId = String(cartService.getCart()?.id ?? '').trim();
+    if (isRemoteMode && !isCartReady) {
+      setFormError(
+        cartHydrationStatus === 'error'
+          ? cartError || 'No fue posible preparar el carrito para iniciar sesión.'
+          : 'Preparando el carrito antes de iniciar sesión.'
+      );
+      return;
+    }
+
+    const guestCartId = cartService.getGuestCartIdForAuth(cart);
+
+    if (isRemoteMode && !guestCartId) {
+      setFormError('No fue posible preparar un carrito invitado válido para iniciar sesión.');
+      return;
+    }
 
     const result = await login({
       email: values.email.trim(),
@@ -61,6 +73,14 @@ function Login() {
     navigate(nextPath, { replace: true });
   };
 
+  const submitDisabled = isSubmittingAuth || (isRemoteMode && !isCartReady);
+  const blockedMessage =
+    isRemoteMode && !isCartReady
+      ? cartHydrationStatus === 'error'
+        ? cartError || 'No fue posible preparar el carrito para iniciar sesión.'
+        : 'Preparando carrito para conservar tus productos antes de autenticarte...'
+      : '';
+
   return (
     <section className={styles.container}>
       <div className={styles.card}>
@@ -73,36 +93,40 @@ function Login() {
 
         <div className={styles.infoBox}>
           <strong>
-            {isRemoteMode ? 'Credenciales seed demo backend' : 'Credenciales demo locales'}
+            {shouldShowRemoteDemoCredentials
+              ? 'Credenciales seed demo backend'
+              : 'Credenciales demo locales'}
           </strong>
           <div className={styles.credentialsList}>
-            {isRemoteMode ? (
+            {shouldShowRemoteDemoCredentials ? (
               <>
                 <span className={styles.credentialRow}>
-                  Admin: {REMOTE_DEMO_CREDENTIALS.admin.email} /{' '}
-                  {REMOTE_DEMO_CREDENTIALS.admin.password}
+                  Admin: {remoteDemoCredentials.admin.email} /{' '}
+                  {remoteDemoCredentials.admin.password}
                 </span>
                 <span className={styles.credentialRow}>
-                  Customer: {REMOTE_DEMO_CREDENTIALS.customer.email} /{' '}
-                  {REMOTE_DEMO_CREDENTIALS.customer.password}
+                  Customer: {remoteDemoCredentials.customer.email} /{' '}
+                  {remoteDemoCredentials.customer.password}
                 </span>
-                <span className={styles.credentialRow}>
-                  Guest token demo: {REMOTE_DEMO_CREDENTIALS.guestToken}
-                </span>
+                {remoteDemoCredentials.guestToken ? (
+                  <span className={styles.credentialRow}>
+                    Guest token demo: {remoteDemoCredentials.guestToken}
+                  </span>
+                ) : null}
                 <div className={styles.demoActions}>
                   <button
                     type="button"
                     className={styles.demoActionButton}
-                    disabled={isSubmittingAuth}
-                    onClick={() => fillDemoCredentials(setValues, REMOTE_DEMO_CREDENTIALS.customer)}
+                    disabled={submitDisabled}
+                    onClick={() => fillDemoCredentials(setValues, remoteDemoCredentials.customer)}
                   >
                     Usar customer demo
                   </button>
                   <button
                     type="button"
                     className={styles.demoActionButton}
-                    disabled={isSubmittingAuth}
-                    onClick={() => fillDemoCredentials(setValues, REMOTE_DEMO_CREDENTIALS.admin)}
+                    disabled={submitDisabled}
+                    onClick={() => fillDemoCredentials(setValues, remoteDemoCredentials.admin)}
                   >
                     Usar admin demo
                   </button>
@@ -124,7 +148,7 @@ function Login() {
             <span className={styles.label}>Correo electrónico</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="email"
               value={values.email}
               onChange={handleChange}
@@ -137,7 +161,7 @@ function Login() {
             <span className={styles.label}>Contraseña</span>
             <input
               className={styles.input}
-              disabled={isSubmittingAuth}
+              disabled={submitDisabled}
               name="password"
               value={values.password}
               onChange={handleChange}
@@ -146,9 +170,11 @@ function Login() {
             />
           </label>
 
-          {formError || authError ? <p className={styles.error}>{formError || authError}</p> : null}
+          {formError || authError || blockedMessage ? (
+            <p className={styles.error}>{formError || authError || blockedMessage}</p>
+          ) : null}
 
-          <button type="submit" className={styles.primaryButton} disabled={isSubmittingAuth}>
+          <button type="submit" className={styles.primaryButton} disabled={submitDisabled}>
             {isSubmittingAuth ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>

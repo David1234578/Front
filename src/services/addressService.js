@@ -2,6 +2,7 @@ import { appConfig } from '../config';
 import {
   deleteAddress,
   loadAddressesByUserId,
+  replaceAddressesByUserId,
   saveAddress,
   setDefaultAddress,
 } from '../utils/addressStorage';
@@ -18,6 +19,15 @@ const normalizeAddressResponse = (userId, payload) => {
     .filter(Boolean)
     .map((address) => saveAddress({ ...address, userId }))
     .filter(Boolean);
+};
+
+const replaceAddressesResponse = (userId, payload) => {
+  const addresses = Array.isArray(payload) ? payload : [payload];
+
+  return replaceAddressesByUserId(
+    userId,
+    addresses.filter(Boolean).map((address) => ({ ...address, userId }))
+  );
 };
 
 function getAddressesByUserId(userId) {
@@ -51,7 +61,7 @@ function getAddressesByUserIdAsync(userId) {
   return requestJson('/users/me/addresses', {
     method: 'GET',
     token: loadSessionToken(),
-  }).then((response) => normalizeAddressResponse(userId, response));
+  }).then((response) => replaceAddressesResponse(userId, response));
 }
 
 function saveUserAddressAsync(userId, address) {

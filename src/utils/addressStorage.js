@@ -70,6 +70,25 @@ export function loadAddressesByUserId(userId) {
   return readAddresses().filter((address) => address.userId === normalizedUserId);
 }
 
+export function replaceAddressesByUserId(userId, addresses) {
+  const normalizedUserId = String(userId ?? '').trim();
+
+  if (!normalizedUserId) {
+    return [];
+  }
+
+  const nextUserAddresses = (Array.isArray(addresses) ? addresses : [])
+    .map((address) => normalizeAddress({ ...address, userId: normalizedUserId }))
+    .filter((address) => address.userId === normalizedUserId);
+  const otherUsersAddresses = readAddresses().filter(
+    (storedAddress) => storedAddress.userId !== normalizedUserId
+  );
+
+  return writeAddresses([...otherUsersAddresses, ...nextUserAddresses]).filter(
+    (storedAddress) => storedAddress.userId === normalizedUserId
+  );
+}
+
 export function saveAddress(address) {
   const normalizedAddress = normalizeAddress(address);
   const currentAddresses = readAddresses().filter(

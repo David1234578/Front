@@ -21,6 +21,7 @@ function ProductForm({
   submitError = '',
 }) {
   const [values, setValues] = useState(emptyValues);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     const fallbackCategory = categories.find(
@@ -41,11 +42,17 @@ function ProductForm({
     } else {
       setValues(emptyValues);
     }
+
+    setFormError('');
   }, [categories, initialValues]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setValues((prev) => ({ ...prev, [name]: value }));
+
+    if (formError) {
+      setFormError('');
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -63,10 +70,27 @@ function ProductForm({
     const parsedRating = Number(initialValues?.rating ?? 3);
     const rating = Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, parsedRating)) : 3;
 
-    if (!name) return;
-    if (!selectedCategory) return;
-    if (!Number.isFinite(price) || price <= 0) return;
-    if (!Number.isFinite(stock) || stock < 0) return;
+    if (!name) {
+      setFormError('El nombre es obligatorio.');
+      return;
+    }
+
+    if (!selectedCategory) {
+      setFormError('Selecciona una categoría válida.');
+      return;
+    }
+
+    if (!Number.isFinite(price) || price <= 0) {
+      setFormError('Ingresa un precio válido mayor a 0.');
+      return;
+    }
+
+    if (!Number.isFinite(stock) || stock < 0) {
+      setFormError('Ingresa un stock válido igual o mayor a 0.');
+      return;
+    }
+
+    setFormError('');
 
     const result = await onSubmit({
       ...initialValues,
@@ -85,6 +109,10 @@ function ProductForm({
 
     if (!isEditing && result?.ok !== false) {
       setValues(emptyValues);
+    }
+
+    if (!result?.ok) {
+      setFormError(result?.error ?? 'No fue posible guardar el producto.');
     }
   };
 
@@ -157,14 +185,14 @@ function ProductForm({
         </div>
 
         <label className={styles.field}>
-          <span className={styles.label}>Imagen (URL)</span>
+          <span className={styles.label}>Imagen (URL opcional)</span>
           <input
             className={styles.input}
             disabled={isSubmitting}
             name="image"
             value={values.image}
             onChange={handleChange}
-            placeholder="https://..."
+            placeholder="https://... (opcional)"
           />
         </label>
 
@@ -181,7 +209,9 @@ function ProductForm({
           />
         </label>
 
-        {submitError ? <p className={styles.error}>{submitError}</p> : null}
+        {formError || submitError ? (
+          <p className={styles.error}>{formError || submitError}</p>
+        ) : null}
 
         <div className={styles.actions}>
           {onCancel ? (

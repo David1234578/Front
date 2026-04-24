@@ -102,6 +102,13 @@ function AdminDashboard() {
           </button>
           <button
             type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate('/admin/users')}
+          >
+            Gestionar usuarios
+          </button>
+          <button
+            type="button"
             className={styles.primaryButton}
             onClick={() => navigate('/admin/products')}
           >
@@ -152,7 +159,9 @@ function AdminDashboard() {
                 <article key={order.id} className={styles.listItem}>
                   <div>
                     <strong>{order.id}</strong>
-                    <span>{order.customer.fullName || 'Cliente sin nombre'}</span>
+                    <span>
+                      {order.userFullName || order.customer?.fullName || 'Cliente sin nombre'}
+                    </span>
                   </div>
                   <div className={styles.listMeta}>
                     <span>{new Date(order.createdAt).toLocaleDateString('es-CO')}</span>
@@ -167,7 +176,7 @@ function AdminDashboard() {
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <h2 className={styles.sectionTitle}>Usuarios recientes</h2>
-            <span className={styles.helper}>Incluye el administrador demo</span>
+            <span className={styles.helper}>Sincronizados desde backend en modo remoto</span>
           </div>
 
           {recentUsers.length === 0 ? (
@@ -177,12 +186,17 @@ function AdminDashboard() {
               {recentUsers.map((user) => (
                 <article key={user.id} className={styles.listItem}>
                   <div>
-                    <strong>{user.name}</strong>
+                    <strong>{user.fullName || user.name}</strong>
                     <span>{user.email}</span>
                   </div>
-                  <span className={styles.roleBadge}>
-                    {user.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
-                  </span>
+                  <div className={styles.listMeta}>
+                    <span className={styles.roleBadge}>
+                      {user.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
+                    </span>
+                    <span className={styles.roleBadge}>
+                      {user.status === 'INACTIVE' ? 'Inactivo' : 'Activo'}
+                    </span>
+                  </div>
                 </article>
               ))}
             </div>

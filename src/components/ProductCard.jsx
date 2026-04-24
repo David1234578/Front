@@ -3,6 +3,8 @@ import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
+import OptionalImage from './OptionalImage';
+
 function ProductCard({
   id,
   name,
@@ -41,7 +43,7 @@ function ProductCard({
 
   return (
     <article className={styles.productCard}>
-      <img src={image} alt={name} className={styles.productImage} />
+      <OptionalImage src={image} alt={name} className={styles.productImage} />
       <div className={styles.productInfo}>
         <span className={styles.productCategory}>{productCategory}</span>
         <h3 className={styles.productName}>{name}</h3>

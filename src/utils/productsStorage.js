@@ -51,10 +51,10 @@ const buildSku = (product, fallbackId) => {
   return `${categoryPrefix}-${String(normalizedId).padStart(3, '0')}`;
 };
 
-const normalizeProduct = (product) => {
-  const seedProduct = seedById.get(product?.id);
+const normalizeProduct = (product, { seedFallback = true } = {}) => {
+  const seedProduct = seedFallback ? seedById.get(product?.id) : null;
   const mergedProduct = {
-    ...seedProduct,
+    ...(seedProduct ?? {}),
     ...product,
   };
   const categoryName =
@@ -81,34 +81,34 @@ const normalizeProduct = (product) => {
   };
 };
 
-const normalizeProducts = (products) => {
+const normalizeProducts = (products, options = {}) => {
   if (!Array.isArray(products)) {
-    return seedProducts;
+    return options.seedFallback === false ? [] : seedProducts;
   }
 
-  return products.map(normalizeProduct);
+  return products.map((product) => normalizeProduct(product, options));
 };
 
-export function loadProducts() {
+export function loadProducts(options = {}) {
   if (typeof window === 'undefined') {
-    return seedProducts;
+    return options.seedFallback === false ? [] : seedProducts;
   }
 
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (!stored) {
-    return seedProducts;
+    return options.seedFallback === false ? [] : seedProducts;
   }
 
   try {
     const parsed = JSON.parse(stored);
-    return normalizeProducts(parsed);
+    return normalizeProducts(parsed, options);
   } catch {
-    return seedProducts;
+    return options.seedFallback === false ? [] : seedProducts;
   }
 }
 
-export function saveProducts(products) {
-  const normalizedProducts = normalizeProducts(products);
+export function saveProducts(products, options = {}) {
+  const normalizedProducts = normalizeProducts(products, options);
 
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedProducts));

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import OptionalImage from '../components/OptionalImage';
 import useCart from '../hooks/useCart';
 import styles from '../styles/Cart.module.css';
 import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
@@ -61,10 +62,12 @@ function Cart() {
 
               return (
                 <article key={item.id} className={styles.item}>
-                  <img className={styles.image} src={item.image} alt={item.name} />
+                  <OptionalImage className={styles.image} src={item.image} alt={item.name} />
 
                   <div className={styles.itemInfo}>
-                    <span className={styles.category}>{item.category}</span>
+                    {item.category && item.category !== 'Sin categoría' ? (
+                      <span className={styles.category}>{item.category}</span>
+                    ) : null}
                     <h2 className={styles.name}>{item.name}</h2>
                     <p className={styles.price}>Precio unitario: {formatCOP(item.price)}</p>
                     <p className={styles.stock}>Stock disponible: {item.stockQty ?? item.stock}</p>
@@ -80,7 +83,9 @@ function Cart() {
                       <button
                         type="button"
                         className={styles.btnQuantity}
-                        onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                        onClick={() =>
+                          updateCartItemQuantity(item.productId ?? item.id, item.quantity - 1)
+                        }
                         disabled={item.quantity <= 1}
                       >
                         -
@@ -89,7 +94,9 @@ function Cart() {
                       <button
                         type="button"
                         className={styles.btnQuantity}
-                        onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          updateCartItemQuantity(item.productId ?? item.id, item.quantity + 1)
+                        }
                         disabled={item.quantity >= (item.stockQty ?? item.stock)}
                       >
                         +
@@ -99,7 +106,7 @@ function Cart() {
                     <button
                       type="button"
                       className={styles.btnRemove}
-                      onClick={() => removeCartItem(item.id)}
+                      onClick={() => removeCartItem(item.productId ?? item.id)}
                     >
                       Eliminar
                     </button>

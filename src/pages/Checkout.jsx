@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import OptionalImage from '../components/OptionalImage';
 import useAuth from '../hooks/useAuth';
 import useCart from '../hooks/useCart';
 import addressService from '../services/addressService';
@@ -383,7 +384,7 @@ function Checkout({ onCompleteCheckout }) {
           <div className={styles.summaryList}>
             {cartItems.map((item) => (
               <article key={item.id} className={styles.summaryItem}>
-                <img className={styles.summaryImage} src={item.image} alt={item.name} />
+                <OptionalImage className={styles.summaryImage} src={item.image} alt={item.name} />
                 <div>
                   <h3 className={styles.summaryName}>{item.name}</h3>
                   <p className={styles.summaryMeta}>

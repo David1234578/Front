@@ -5,6 +5,8 @@ import { PRODUCTS_DEFAULT_RATING, loadProducts, saveProducts } from '../utils/pr
 import categoryService from './categoryService';
 import { requestJson } from './http';
 
+const REMOTE_STORAGE_OPTIONS = Object.freeze({ seedFallback: false });
+
 const normalizeId = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -31,6 +33,10 @@ const extractCollection = (payload) => {
 
   return [];
 };
+
+const loadRemoteProducts = () => loadProducts(REMOTE_STORAGE_OPTIONS);
+
+const persistRemoteProductsCache = (products) => saveProducts(products, REMOTE_STORAGE_OPTIONS);
 
 const normalizeProductInput = (product, currentProducts = []) => {
   const normalizedId = normalizeId(product?.id);
@@ -75,6 +81,37 @@ const normalizeProductInput = (product, currentProducts = []) => {
   };
 };
 
+const normalizeRemoteProductInput = (product) => {
+  const categoryName =
+    String(product?.categoryName ?? product?.category?.name ?? product?.category ?? '').trim() ||
+    'Sin categoría';
+  const categoryId = normalizeId(product?.categoryId ?? product?.category?.id) || undefined;
+  const stockQty = Number(product?.stockQty ?? product?.stock ?? product?.productStock);
+  const normalizedStockQty = Number.isFinite(stockQty) && stockQty >= 0 ? Math.floor(stockQty) : 0;
+  const price = Number(product?.price ?? 0) || 0;
+  const isActive = Boolean(product?.isActive ?? product?.active ?? true);
+  const rating = Number(product?.rating ?? PRODUCTS_DEFAULT_RATING);
+
+  return {
+    ...product,
+    id: normalizeId(product?.id),
+    categoryId,
+    categoryName,
+    category: categoryName,
+    sku: String(product?.sku ?? '').trim(),
+    price,
+    rating: Number.isFinite(rating) ? Math.min(5, Math.max(1, rating)) : PRODUCTS_DEFAULT_RATING,
+    stockQty: normalizedStockQty,
+    stock: normalizedStockQty,
+    isActive,
+    isAvailable: Boolean((product?.isAvailable ?? normalizedStockQty > 0) && isActive),
+    image: String(product?.image ?? product?.imageUrl ?? '').trim(),
+    description: String(product?.description ?? '').trim(),
+    createdAt: String(product?.createdAt ?? ''),
+    updatedAt: String(product?.updatedAt ?? ''),
+  };
+};
+
 const applyFilters = (products, filters = {}) => {
   const normalizedSearch = String(filters?.search ?? '')
     .trim()
@@ -107,9 +144,8 @@ const applyFilters = (products, filters = {}) => {
 const persistProducts = (products) => saveProducts(products);
 
 const persistRemoteProducts = (products) => {
-  const currentProducts = loadProducts();
-  return persistProducts(
-    products.map((product) => normalizeProductInput(product, currentProducts))
+  return persistRemoteProductsCache(
+    products.map((product) => normalizeRemoteProductInput(product))
   );
 };
 
@@ -235,15 +271,15 @@ function getProductByIdAsync(productId) {
   return requestJson(`/products/${normalizedId}`, {
     method: 'GET',
   }).then((response) => {
-    const normalizedProduct = normalizeProductInput(response, loadProducts());
-    const currentProducts = loadProducts();
+    const normalizedProduct = normalizeRemoteProductInput(response);
+    const currentProducts = loadRemoteProducts();
     const nextProducts = currentProducts.some((product) => product.id === normalizedProduct.id)
       ? currentProducts.map((product) =>
           product.id === normalizedProduct.id ? normalizedProduct : product
         )
       : [...currentProducts, normalizedProduct];
 
-    persistProducts(nextProducts);
+    persistRemoteProductsCache(nextProducts);
     return normalizedProduct;
   });
 }
