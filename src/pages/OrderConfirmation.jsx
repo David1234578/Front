@@ -11,6 +11,10 @@ function OrderConfirmation({ order, onBackHome }) {
     navigate('/');
   };
 
+  const handleViewOrders = () => {
+    navigate('/user/orders');
+  };
+
   if (!order) {
     return (
       <section className={styles.container}>
@@ -121,6 +125,9 @@ function OrderConfirmation({ order, onBackHome }) {
         </section>
 
         <div className={styles.actions}>
+          <button type="button" className={styles.secondaryButton} onClick={handleViewOrders}>
+            Ver historial
+          </button>
           <button type="button" className={styles.primaryButton} onClick={handleBackHome}>
             Volver al inicio
           </button>

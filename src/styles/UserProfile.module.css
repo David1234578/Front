@@ -1,0 +1,167 @@
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.title {
+  margin: 0;
+  color: white;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.subtitle {
+  margin: 0.5rem 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  max-width: 52ch;
+}
+
+.headerActions,
+.layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.headerActions {
+  grid-auto-flow: column;
+}
+
+.layout {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.9fr);
+}
+
+.card,
+.statCard,
+.emptyState,
+.latestOrder {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(22, 30, 84, 0.16);
+}
+
+.card {
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem;
+  color: var(--gray-900);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.infoGrid,
+.statsGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.infoGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statsGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.infoItem,
+.statCard {
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.label {
+  display: block;
+  color: var(--gray-500);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.infoItem strong,
+.statCard strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--gray-900);
+}
+
+.latestOrder,
+.emptyState {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.latestOrderText,
+.emptyText {
+  margin: 0;
+  color: var(--gray-700);
+  font-weight: 700;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: var(--primary);
+  color: white;
+}
+
+.primaryButton:hover {
+  background: var(--primary-dark);
+}
+
+.secondaryButton {
+  background: white;
+  color: var(--primary-dark);
+}
+
+.secondaryButton:hover {
+  background: var(--gray-100);
+}
+
+@media (max-width: 960px) {
+  .layout,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .header,
+  .headerActions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

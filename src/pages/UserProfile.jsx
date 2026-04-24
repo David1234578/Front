@@ -1,0 +1,132 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import styles from '../styles/UserProfile.module.css';
+import { formatCOP } from '../utils/formatCOP';
+import { loadOrders } from '../utils/ordersStorage';
+
+function UserProfile({ user }) {
+  const navigate = useNavigate();
+  const orders = useMemo(() => loadOrders(), []);
+  const latestOrder = orders[0] ?? null;
+
+  const profile = {
+    name: user?.name || latestOrder?.customer?.fullName || 'Invitado',
+    email: user?.email || latestOrder?.customer?.email || 'Sin correo registrado',
+    phone: user?.phone || latestOrder?.customer?.phone || 'Sin telefono registrado',
+    address: user?.address || latestOrder?.customer?.address || 'Aun no hay direccion registrada',
+    city: user?.city || latestOrder?.customer?.city || 'Sin ciudad registrada',
+    postalCode: user?.postalCode || latestOrder?.customer?.postalCode || '---',
+  };
+
+  const stats = {
+    totalOrders: orders.length,
+    latestOrderId: latestOrder?.id ?? 'Sin compras',
+    latestTotal: latestOrder ? formatCOP(latestOrder.totals.total) : 'Sin compras',
+  };
+
+  return (
+    <section className={styles.container}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Semana 10</p>
+          <h1 className={styles.title}>Mi cuenta</h1>
+          <p className={styles.subtitle}>
+            Esta vista centraliza el perfil mock del cliente y un resumen rapido de sus compras
+            recientes.
+          </p>
+        </div>
+
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate('/user/orders')}
+          >
+            Ver historial
+          </button>
+          <button type="button" className={styles.primaryButton} onClick={() => navigate('/')}>
+            Volver al inicio
+          </button>
+        </div>
+      </header>
+
+      <div className={styles.layout}>
+        <section className={styles.card}>
+          <h2 className={styles.sectionTitle}>Datos del perfil</h2>
+          <div className={styles.infoGrid}>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Nombre</span>
+              <strong>{profile.name}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Correo</span>
+              <strong>{profile.email}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Telefono</span>
+              <strong>{profile.phone}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Direccion</span>
+              <strong>{profile.address}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Ciudad</span>
+              <strong>{profile.city}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Codigo postal</span>
+              <strong>{profile.postalCode}</strong>
+            </div>
+          </div>
+        </section>
+
+        <aside className={styles.card}>
+          <h2 className={styles.sectionTitle}>Resumen de compras</h2>
+
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <span className={styles.label}>Ordenes guardadas</span>
+              <strong>{stats.totalOrders}</strong>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.label}>Ultima orden</span>
+              <strong>{stats.latestOrderId}</strong>
+            </div>
+            <div className={styles.statCard}>
+              <span className={styles.label}>Ultimo total</span>
+              <strong>{stats.latestTotal}</strong>
+            </div>
+          </div>
+
+          {latestOrder ? (
+            <div className={styles.latestOrder}>
+              <p className={styles.latestOrderText}>
+                Tu compra mas reciente fue enviada con{' '}
+                <strong>{latestOrder.shippingMethod.label}</strong> y pagada con{' '}
+                <strong>{latestOrder.paymentMethod.label}</strong>.
+              </p>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => navigate(`/user/orders/${latestOrder.id}`)}
+              >
+                Abrir ultima orden
+              </button>
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <p className={styles.emptyText}>
+                Aun no hay compras registradas. Cuando completes el checkout, el historial quedara
+                disponible desde esta seccion.
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
+    </section>
+  );
+}
+
+export default UserProfile;

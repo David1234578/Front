@@ -58,6 +58,8 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .userName {
@@ -101,5 +103,9 @@
 
   .brand {
     min-width: auto;
+  }
+
+  .auth {
+    justify-content: flex-start;
   }
 }

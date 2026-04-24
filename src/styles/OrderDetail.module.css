@@ -5,125 +5,95 @@
   padding: 0 1rem 2rem;
 }
 
-.card {
-  margin-top: 2rem;
-  padding: 1.75rem;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 18px 50px rgba(22, 30, 84, 0.16);
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 1.5rem;
 }
 
 .eyebrow {
-  margin: 0;
-  color: var(--success);
+  margin: 0 0 0.35rem;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.85rem;
-  font-weight: 900;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .title {
-  margin: 0.35rem 0 0;
-  color: var(--gray-900);
+  margin: 0;
+  color: white;
   font-size: 2rem;
   font-weight: 900;
 }
 
 .subtitle {
-  margin: 0.75rem 0 0;
-  color: var(--gray-500);
+  margin: 0.5rem 0 0;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 700;
-  max-width: 60ch;
+  max-width: 52ch;
 }
 
-.metaGrid {
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
-  margin-top: 1.5rem;
 }
 
-.metaCard,
-.section {
-  padding: 1rem;
-  border-radius: 16px;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+.summaryCard,
+.card,
+.emptyState {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px rgba(22, 30, 84, 0.16);
 }
 
-.metaLabel {
+.summaryCard,
+.card {
+  padding: 1.25rem;
+}
+
+.label {
   display: block;
   color: var(--gray-500);
   font-size: 0.85rem;
   font-weight: 800;
 }
 
-.metaValue {
+.summaryCard strong {
   display: block;
-  margin-top: 0.35rem;
+  margin-top: 0.25rem;
   color: var(--gray-900);
-  font-weight: 900;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin: 1rem 0;
 }
 
 .sectionTitle {
-  margin: 0 0 0.85rem;
+  margin: 0 0 1rem;
   color: var(--gray-900);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 900;
 }
 
 .infoList p {
+  margin: 0;
   color: var(--gray-900);
 }
 
 .infoList p + p {
   margin-top: 0.35rem;
-}
-
-.itemList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.item {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
-  gap: 0.85rem;
-  align-items: center;
-  padding: 0.75rem;
-  border-radius: 14px;
-  background: white;
-}
-
-.itemImage {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.itemName {
-  margin: 0;
-  color: var(--gray-900);
-  font-size: 1rem;
-  font-weight: 900;
-}
-
-.itemMeta {
-  margin: 0.25rem 0 0;
-  color: var(--gray-500);
-}
-
-.itemPrice {
-  color: var(--gray-900);
 }
 
 .totalRows {
@@ -142,22 +112,62 @@
 .totalRowStrong {
   padding-top: 0.85rem;
   border-top: 1px solid var(--gray-200);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
-.actions {
+.itemList {
   display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.85rem;
+  border-radius: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.itemImage {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.itemName {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.itemMeta {
+  margin: 0.25rem 0 0;
+  color: var(--gray-500);
+}
+
+.itemPrice {
+  color: var(--gray-900);
+  font-weight: 900;
+}
+
+.emptyState {
+  margin-top: 2rem;
+  padding: 2rem;
+  text-align: center;
 }
 
 .primaryButton,
 .secondaryButton {
   border: none;
   border-radius: 10px;
-  padding: 0.85rem 1rem;
-  font-weight: 900;
+  padding: 0.8rem 1rem;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -180,19 +190,21 @@
 }
 
 @media (max-width: 960px) {
-  .metaGrid,
+  .summaryGrid,
   .layout {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 720px) {
-  .item {
-    grid-template-columns: 1fr;
-  }
-
+  .header,
   .actions {
     flex-direction: column;
-    justify-content: stretch;
+    align-items: stretch;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }

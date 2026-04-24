@@ -8,19 +8,39 @@ import CategoryProducts from './pages/CategoryProducts';
 import Checkout from './pages/Checkout';
 import Home from './pages/Home';
 import OrderConfirmation from './pages/OrderConfirmation';
+import OrderDetail from './pages/OrderDetail';
 import ProductList from './pages/ProductList';
+import UserOrders from './pages/UserOrders';
+import UserProfile from './pages/UserProfile';
 import {
   calculateOrderTotals,
   getPaymentMethodById,
   getShippingOptionById,
 } from './utils/calculateOrderTotals';
 import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
-import { saveOrder } from './utils/ordersStorage';
+import { loadOrders, saveOrder } from './utils/ordersStorage';
 
 import './App.css';
 
+function getInitialUser() {
+  const latestOrder = loadOrders()[0];
+
+  if (!latestOrder?.customer?.fullName?.trim()) {
+    return null;
+  }
+
+  return {
+    name: latestOrder.customer.fullName,
+    email: latestOrder.customer.email,
+    phone: latestOrder.customer.phone,
+    address: latestOrder.customer.address,
+    city: latestOrder.customer.city,
+    postalCode: latestOrder.customer.postalCode,
+  };
+}
+
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getInitialUser);
   const [cartItems, setCartItems] = useState(loadCartItems);
   const [latestOrder, setLatestOrder] = useState(null);
 
@@ -114,6 +134,14 @@ function App() {
 
     saveOrder(order);
     setLatestOrder(order);
+    setUser({
+      name: customer.fullName,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      city: customer.city,
+      postalCode: customer.postalCode,
+    });
     setCartItems([]);
     return order;
   };
@@ -179,6 +207,9 @@ function App() {
               <OrderConfirmation order={latestOrder} onBackHome={handleBackHomeAfterOrder} />
             }
           />
+          <Route path="/user/profile" element={<UserProfile user={user} />} />
+          <Route path="/user/orders" element={<UserOrders />} />
+          <Route path="/user/orders/:orderId" element={<OrderDetail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
