@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import useAuth from '../hooks/useAuth';
+import orderService from '../services/orderService';
 import styles from '../styles/OrderDetail.module.css';
 import { formatCOP } from '../utils/formatCOP';
-import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function OrderDetail() {
   const navigate = useNavigate();
@@ -12,8 +12,7 @@ function OrderDetail() {
   const { currentUser } = useAuth();
 
   const order = useMemo(
-    () =>
-      loadOrdersByUserId(currentUser?.id).find((savedOrder) => savedOrder.id === orderId) ?? null,
+    () => orderService.getOrderByIdForUser(currentUser?.id, orderId),
     [currentUser?.id, orderId]
   );
 

@@ -3,17 +3,19 @@ import { useNavigate } from 'react-router-dom';
 
 import OrderCard from '../components/OrderCard';
 import useAuth from '../hooks/useAuth';
+import orderService from '../services/orderService';
 import styles from '../styles/UserOrders.module.css';
-import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function UserOrders() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const orders = useMemo(
     () =>
-      loadOrdersByUserId(currentUser?.id).sort(
-        (leftOrder, rightOrder) => new Date(rightOrder.createdAt) - new Date(leftOrder.createdAt)
-      ),
+      orderService
+        .getOrdersByUserId(currentUser?.id)
+        .sort(
+          (leftOrder, rightOrder) => new Date(rightOrder.createdAt) - new Date(leftOrder.createdAt)
+        ),
     [currentUser?.id]
   );
 

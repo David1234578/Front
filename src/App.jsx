@@ -20,13 +20,13 @@ import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
+import orderService from './services/orderService';
 import {
   calculateOrderTotals,
   getPaymentMethodById,
   getShippingOptionById,
 } from './utils/calculateOrderTotals';
 import { CART_STORAGE_KEY, loadCartItems } from './utils/cartStorage';
-import { saveOrder } from './utils/ordersStorage';
 
 import './App.css';
 
@@ -113,18 +113,15 @@ function App() {
     }
 
     const totals = calculateOrderTotals(cartItems, shippingMethodId);
-    const order = {
-      id: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    const order = orderService.createOrder({
       userId: currentUser?.id ?? '',
-      createdAt: new Date().toISOString(),
       items: cartItems.map((item) => ({ ...item })),
       customer,
       shippingMethod: getShippingOptionById(shippingMethodId),
       paymentMethod: getPaymentMethodById(paymentMethodId),
       totals,
-    };
+    });
 
-    saveOrder(order);
     setLatestOrder(order);
     setCartItems([]);
     return order;

@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import productService from '../services/productService';
 import homeStyles from '../styles/Home.module.css';
-import { loadProducts } from '../utils/productsStorage';
 
 function Home() {
-  const [productsState] = useState(loadProducts);
+  const [productsState] = useState(productService.getProducts);
   const navigate = useNavigate();
 
   const categoryTiles = useMemo(() => {

@@ -1,72 +1,34 @@
 import { createContext, useMemo, useState } from 'react';
 
-import {
-  clearSessionUser,
-  createUser,
-  findUserByEmail,
-  loadSessionUser,
-  saveSessionUser,
-} from '../utils/authStorage';
+import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
 function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(loadSessionUser);
+  const [currentUser, setCurrentUser] = useState(authService.getSessionUser);
 
-  const register = ({ name, email, password }) => {
-    const normalizedEmail = String(email ?? '')
-      .trim()
-      .toLowerCase();
+  const register = (payload) => {
+    const result = authService.register(payload);
 
-    if (!name?.trim()) {
-      return { ok: false, error: 'Ingresa un nombre para crear la cuenta.' };
+    if (result.ok) {
+      setCurrentUser(result.user);
     }
 
-    if (!normalizedEmail) {
-      return { ok: false, error: 'Ingresa un correo electrónico válido.' };
-    }
-
-    if (!password || password.length < 6) {
-      return { ok: false, error: 'La contraseña debe tener al menos 6 caracteres.' };
-    }
-
-    if (findUserByEmail(normalizedEmail)) {
-      return { ok: false, error: 'Ya existe una cuenta registrada con ese correo.' };
-    }
-
-    const user = createUser({ name: name.trim(), email: normalizedEmail, password });
-    saveSessionUser(user);
-    setCurrentUser(user);
-
-    return { ok: true, user };
+    return result;
   };
 
-  const login = ({ email, password }) => {
-    const user = findUserByEmail(email);
+  const login = (payload) => {
+    const result = authService.login(payload);
 
-    if (!user || user.password !== password) {
-      return { ok: false, error: 'Credenciales inválidas. Verifica correo y contraseña.' };
+    if (result.ok) {
+      setCurrentUser(result.user);
     }
 
-    const sessionUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      address: user.address,
-      city: user.city,
-      postalCode: user.postalCode,
-    };
-
-    saveSessionUser(sessionUser);
-    setCurrentUser(sessionUser);
-
-    return { ok: true, user: sessionUser };
+    return result;
   };
 
   const logout = () => {
-    clearSessionUser();
+    authService.logout();
     setCurrentUser(null);
   };
 

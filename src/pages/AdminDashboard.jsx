@@ -1,17 +1,13 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import adminService from '../services/adminService';
 import styles from '../styles/AdminDashboard.module.css';
-import { loadUsers } from '../utils/authStorage';
 import { formatCOP } from '../utils/formatCOP';
-import { loadOrders } from '../utils/ordersStorage';
-import { loadProducts } from '../utils/productsStorage';
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const products = useMemo(() => loadProducts(), []);
-  const orders = useMemo(() => loadOrders(), []);
-  const users = useMemo(() => loadUsers(), []);
+  const { products, orders, users } = useMemo(() => adminService.getDashboardSnapshot(), []);
 
   const stats = useMemo(() => {
     const totalRevenue = orders.reduce((total, order) => total + (order.totals?.total ?? 0), 0);

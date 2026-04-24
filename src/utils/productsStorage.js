@@ -21,6 +21,14 @@ const normalizeProduct = (product) => {
   };
 };
 
+const normalizeProducts = (products) => {
+  if (!Array.isArray(products)) {
+    return seedProducts;
+  }
+
+  return products.map(normalizeProduct);
+};
+
 export function loadProducts() {
   if (typeof window === 'undefined') {
     return seedProducts;
@@ -33,10 +41,20 @@ export function loadProducts() {
 
   try {
     const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed.map(normalizeProduct) : seedProducts;
+    return normalizeProducts(parsed);
   } catch {
     return seedProducts;
   }
+}
+
+export function saveProducts(products) {
+  const normalizedProducts = normalizeProducts(products);
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedProducts));
+  }
+
+  return normalizedProducts;
 }
 
 export const PRODUCTS_STORAGE_KEY = STORAGE_KEY;

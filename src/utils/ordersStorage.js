@@ -13,6 +13,7 @@ const normalizeOrderItem = (item) => ({
 const normalizeOrder = (order) => ({
   id: String(order?.id ?? ''),
   userId: String(order?.userId ?? ''),
+  status: String(order?.status ?? 'confirmed'),
   createdAt: String(order?.createdAt ?? new Date().toISOString()),
   items: Array.isArray(order?.items) ? order.items.map(normalizeOrderItem) : [],
   customer: {
@@ -67,14 +68,17 @@ export function loadOrders() {
 }
 
 export function saveOrder(order) {
+  const normalizedOrder = normalizeOrder(order);
+
   if (typeof window === 'undefined') {
-    return;
+    return normalizedOrder;
   }
 
-  const normalizedOrder = normalizeOrder(order);
   const currentOrders = loadOrders();
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify([normalizedOrder, ...currentOrders]));
+
+  return normalizedOrder;
 }
 
 export function loadOrdersByUserId(userId) {

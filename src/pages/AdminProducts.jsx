@@ -1,32 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
+import productService from '../services/productService';
 import adminStyles from '../styles/AdminProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
-import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
-
-const STORAGE_KEY = PRODUCTS_STORAGE_KEY;
 
 function AdminProducts() {
   const navigate = useNavigate();
-  const [productsState, setProductsState] = useState(loadProducts);
+  const [productsState, setProductsState] = useState(productService.getProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(productsState));
-    } catch (error) {
-      void error;
-    }
-  }, [productsState]);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -55,22 +41,13 @@ function AdminProducts() {
   };
 
   const handleAddProduct = (product) => {
-    setProductsState((currentProducts) => {
-      const maxId = currentProducts.reduce(
-        (accumulator, item) => Math.max(accumulator, item.id),
-        0
-      );
-
-      return [...currentProducts, { ...product, id: maxId + 1 }];
-    });
+    setProductsState((currentProducts) => productService.createProduct(product, currentProducts));
 
     handleCloseForm();
   };
 
   const handleDeleteProduct = (productId) => {
-    setProductsState((currentProducts) =>
-      currentProducts.filter((product) => product.id !== productId)
-    );
+    setProductsState((currentProducts) => productService.deleteProduct(productId, currentProducts));
 
     if (editingProduct?.id === productId) {
       handleCloseForm();
@@ -84,9 +61,7 @@ function AdminProducts() {
 
   const handleEditSubmit = (updatedProduct) => {
     setProductsState((currentProducts) =>
-      currentProducts.map((product) =>
-        product.id === updatedProduct.id ? updatedProduct : product
-      )
+      productService.updateProduct(updatedProduct, currentProducts)
     );
     handleCloseForm();
   };

@@ -1,0 +1,23 @@
+const DEFAULT_API_BASE_URL = '/api';
+const DEFAULT_TIMEOUT_MS = 10000;
+
+const parseBoolean = (value) =>
+  String(value ?? '')
+    .trim()
+    .toLowerCase() === 'true';
+
+const parseNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const env = import.meta.env ?? {};
+
+const appConfig = Object.freeze({
+  mode: env.MODE ?? 'development',
+  apiBaseUrl: String(env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL).trim(),
+  apiTimeoutMs: parseNumber(env.VITE_API_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
+  useRemoteApi: parseBoolean(env.VITE_USE_REMOTE_API),
+});
+
+export { appConfig };

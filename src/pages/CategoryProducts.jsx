@@ -3,15 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
+import productService from '../services/productService';
 import styles from '../styles/CategoryProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
-import { loadProducts } from '../utils/productsStorage';
 
 function CategoryProducts({ cartItems, onAddToCart }) {
   const [query, setQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [productsState] = useState(loadProducts);
+  const [productsState] = useState(productService.getProducts);
   const navigate = useNavigate();
   const { categoryName } = useParams();
 

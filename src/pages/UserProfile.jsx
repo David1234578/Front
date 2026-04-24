@@ -2,14 +2,14 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import useAuth from '../hooks/useAuth';
+import orderService from '../services/orderService';
 import styles from '../styles/UserProfile.module.css';
 import { formatCOP } from '../utils/formatCOP';
-import { loadOrdersByUserId } from '../utils/ordersStorage';
 
 function UserProfile() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const orders = useMemo(() => loadOrdersByUserId(currentUser?.id), [currentUser?.id]);
+  const orders = useMemo(() => orderService.getOrdersByUserId(currentUser?.id), [currentUser?.id]);
   const latestOrder = orders[0] ?? null;
 
   const profile = {

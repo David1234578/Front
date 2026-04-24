@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
+import productService from '../services/productService';
 import styles from '../styles/ProductList.module.css';
-import { loadProducts } from '../utils/productsStorage';
 
 function ProductList({ cartItems = [], onAddToCart }) {
-  const [productsState] = useState(loadProducts);
+  const [productsState] = useState(productService.getProducts);
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState(null);
