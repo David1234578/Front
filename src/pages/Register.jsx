@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { appConfig } from '../config';
 import useAuth from '../hooks/useAuth';
+import cartService from '../services/cartService';
 import styles from '../styles/AuthPage.module.css';
 
 function Register() {
   const [values, setValues] = useState({
     firstName: '',
     lastName: '',
+    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -15,6 +18,7 @@ function Register() {
   const [formError, setFormError] = useState('');
   const { authError, clearAuthError, isSubmittingAuth, register } = useAuth();
   const navigate = useNavigate();
+  const isRemoteMode = appConfig.useRemoteApi;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -26,6 +30,8 @@ function Register() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const guestCartId = String(cartService.getCart()?.id ?? '').trim();
+
     if (values.password !== values.confirmPassword) {
       setFormError('Las contraseñas no coinciden.');
       return;
@@ -34,8 +40,10 @@ function Register() {
     const result = await register({
       firstName: values.firstName,
       lastName: values.lastName,
+      guestCartId,
       email: values.email,
       password: values.password,
+      phone: values.phone,
     });
 
     if (!result.ok) {
@@ -52,8 +60,9 @@ function Register() {
         <p className={styles.eyebrow}>Semana 12</p>
         <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>
-          Registra un usuario local con rol cliente para mantener sesión, proteger rutas y asociar
-          compras a tu perfil.
+          {isRemoteMode
+            ? 'Crea una cuenta conectada al backend para mantener sesión, asociar direcciones y continuar el checkout autenticado.'
+            : 'Registra un usuario local con rol cliente para mantener sesión, proteger rutas y asociar compras a tu perfil.'}
         </p>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -91,6 +100,18 @@ function Register() {
               onChange={handleChange}
               placeholder="correo@dominio.com"
               type="email"
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Teléfono</span>
+            <input
+              className={styles.input}
+              disabled={isSubmittingAuth}
+              name="phone"
+              value={values.phone}
+              onChange={handleChange}
+              placeholder="3001234567"
             />
           </label>
 

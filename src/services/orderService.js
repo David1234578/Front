@@ -1,7 +1,7 @@
 import { appConfig } from '../config';
 import { loadSessionToken } from '../utils/authStorage';
 import { loadCart } from '../utils/cartStorage';
-import { loadOrders, loadOrdersByUserId, saveOrder } from '../utils/ordersStorage';
+import { loadOrders, loadOrdersByUserId, saveOrder, saveOrders } from '../utils/ordersStorage';
 
 import { requestJson } from './http';
 
@@ -39,14 +39,32 @@ function createOrder(order) {
 }
 
 function getOrdersAsync() {
+  if (appConfig.useRemoteApi) {
+    return requestJson('/orders/me', {
+      method: 'GET',
+      token: loadSessionToken(),
+    }).then((response) => saveOrders(Array.isArray(response) ? response : []));
+  }
+
   return toAsyncResult(() => getOrders());
 }
 
 function getOrdersByUserIdAsync(userId) {
+  if (appConfig.useRemoteApi) {
+    return getOrdersAsync();
+  }
+
   return toAsyncResult(() => getOrdersByUserId(userId));
 }
 
 function getOrderByIdForUserAsync(userId, orderId) {
+  if (appConfig.useRemoteApi) {
+    return requestJson(`/orders/${orderId}`, {
+      method: 'GET',
+      token: loadSessionToken(),
+    }).then((response) => saveOrder(normalizeOrderPayload(response)));
+  }
+
   return toAsyncResult(() => getOrderByIdForUser(userId, orderId));
 }
 

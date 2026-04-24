@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AddressForm from '../components/AddressForm';
@@ -38,15 +38,14 @@ function UserProfile() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
-  const [addresses, setAddresses] = useState(() =>
-    addressService.getAddressesByUserId(currentUser?.id)
-  );
+  const [addresses, setAddresses] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [addressError, setAddressError] = useState('');
   const [addressSuccess, setAddressSuccess] = useState('');
+  const [ordersError, setOrdersError] = useState('');
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
-  const orders = useMemo(() => orderService.getOrdersByUserId(currentUser?.id), [currentUser?.id]);
   const latestOrder = orders[0] ?? null;
 
   const profile = {
@@ -54,7 +53,7 @@ function UserProfile() {
     firstName: currentUser?.firstName || 'Sin nombre registrado',
     lastName: currentUser?.lastName || 'Sin apellido registrado',
     email: currentUser?.email || 'Sin correo registrado',
-    role: currentUser?.role === 'admin' ? 'Administrador' : 'Cliente',
+    role: currentUser?.role === 'ADMIN' ? 'Administrador' : 'Cliente',
     phone: currentUser?.phone || 'Sin telefono registrado',
     status: currentUser?.status === 'ACTIVE' ? 'Activa' : currentUser?.status || 'Sin estado',
     createdAt: formatCreatedAt(currentUser?.createdAt),
@@ -67,11 +66,71 @@ function UserProfile() {
   };
 
   useEffect(() => {
-    setAddresses(addressService.getAddressesByUserId(currentUser?.id));
+    let isMounted = true;
+
+    const loadAddresses = async () => {
+      try {
+        const nextAddresses = await addressService.getAddressesByUserIdAsync(currentUser?.id);
+
+        if (isMounted) {
+          setAddresses(nextAddresses);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setAddressError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar las direcciones de la cuenta.'
+          );
+        }
+      }
+    };
+
+    loadAddresses();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentUser?.id]);
 
-  const refreshAddresses = () => {
-    setAddresses(addressService.getAddressesByUserId(currentUser?.id));
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOrders = async () => {
+      setOrdersError('');
+
+      try {
+        const nextOrders = await orderService.getOrdersByUserIdAsync(currentUser?.id);
+
+        if (isMounted) {
+          setOrders(
+            [...nextOrders].sort(
+              (leftOrder, rightOrder) =>
+                new Date(rightOrder.createdAt) - new Date(leftOrder.createdAt)
+            )
+          );
+        }
+      } catch (error) {
+        if (isMounted) {
+          setOrdersError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar el resumen de compras.'
+          );
+        }
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id]);
+
+  const refreshAddresses = async () => {
+    const nextAddresses = await addressService.getAddressesByUserIdAsync(currentUser?.id);
+    setAddresses(nextAddresses);
   };
 
   const handleStartEdit = () => {
@@ -219,7 +278,7 @@ function UserProfile() {
         </div>
 
         <div className={styles.headerActions}>
-          {currentUser?.role === 'admin' ? (
+          {currentUser?.role === 'ADMIN' ? (
             <button
               type="button"
               className={styles.secondaryButton}
@@ -423,6 +482,8 @@ function UserProfile() {
 
         <aside className={styles.card}>
           <h2 className={styles.sectionTitle}>Resumen de compras</h2>
+
+          {ordersError ? <p className={styles.errorBanner}>{ordersError}</p> : null}
 
           <div className={styles.statsGrid}>
             <div className={styles.statCard}>

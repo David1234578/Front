@@ -4,7 +4,7 @@ import styles from '../styles/ProductForm.module.css';
 
 const emptyValues = {
   name: '',
-  category: '',
+  categoryId: '',
   price: '',
   stock: '',
   image: '',
@@ -15,6 +15,7 @@ function ProductForm({
   initialValues,
   onSubmit,
   onCancel,
+  categories = [],
   isEditing = false,
   isSubmitting = false,
   submitError = '',
@@ -22,10 +23,16 @@ function ProductForm({
   const [values, setValues] = useState(emptyValues);
 
   useEffect(() => {
+    const fallbackCategory = categories.find(
+      (category) =>
+        category.id === Number(initialValues?.categoryId) ||
+        category.name === (initialValues?.categoryName ?? initialValues?.category)
+    );
+
     if (initialValues) {
       setValues({
         name: initialValues.name ?? '',
-        category: initialValues.categoryName ?? initialValues.category ?? '',
+        categoryId: String(initialValues.categoryId ?? fallbackCategory?.id ?? ''),
         price: initialValues.price ?? '',
         stock: initialValues.stockQty ?? initialValues.stock ?? '',
         image: initialValues.image ?? '',
@@ -34,7 +41,7 @@ function ProductForm({
     } else {
       setValues(emptyValues);
     }
-  }, [initialValues]);
+  }, [categories, initialValues]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -45,9 +52,10 @@ function ProductForm({
     event.preventDefault();
 
     const name = values.name.trim();
-    const category = values.category.trim();
     const image = values.image.trim();
     const description = values.description.trim();
+    const categoryId = Number(values.categoryId);
+    const selectedCategory = categories.find((category) => category.id === categoryId) ?? null;
 
     const price = Number(values.price);
     const stock = Number(values.stock);
@@ -56,15 +64,16 @@ function ProductForm({
     const rating = Number.isFinite(parsedRating) ? Math.min(5, Math.max(1, parsedRating)) : 3;
 
     if (!name) return;
+    if (!selectedCategory) return;
     if (!Number.isFinite(price) || price <= 0) return;
     if (!Number.isFinite(stock) || stock < 0) return;
 
     const result = await onSubmit({
       ...initialValues,
       name,
-      categoryId: initialValues?.categoryId,
-      categoryName: category,
-      category,
+      categoryId,
+      categoryName: selectedCategory.name,
+      category: selectedCategory.name,
       price,
       stockQty: stock,
       stock,
@@ -101,14 +110,20 @@ function ProductForm({
 
         <label className={styles.field}>
           <span className={styles.label}>Categoría</span>
-          <input
+          <select
             className={styles.input}
-            disabled={isSubmitting}
-            name="category"
-            value={values.category}
+            disabled={isSubmitting || categories.length === 0}
+            name="categoryId"
+            value={values.categoryId}
             onChange={handleChange}
-            placeholder="Ej: Accesorios"
-          />
+          >
+            <option value="">Selecciona una categoría</option>
+            {categories.map((category) => (
+              <option key={category.id} value={String(category.id)}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </label>
 
         <div className={styles.row}>

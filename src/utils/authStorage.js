@@ -1,7 +1,8 @@
 const USERS_STORAGE_KEY = 'authUsers';
 const SESSION_STORAGE_KEY = 'authSession';
-const DEFAULT_ROLE = 'user';
-const ADMIN_ROLE = 'admin';
+const TOKEN_STORAGE_KEY = 'authToken';
+const DEFAULT_ROLE = 'CUSTOMER';
+const ADMIN_ROLE = 'ADMIN';
 const DEFAULT_ADMIN_USER = {
   id: 'USR-ADMIN-001',
   firstName: 'Admin',
@@ -23,9 +24,21 @@ const buildFullName = (firstName, lastName, fallback = '') => {
 const normalizeRole = (role) => {
   const normalizedRole = String(role ?? '')
     .trim()
-    .toLowerCase();
+    .toUpperCase();
 
-  return normalizedRole === ADMIN_ROLE ? ADMIN_ROLE : DEFAULT_ROLE;
+  if (normalizedRole === ADMIN_ROLE || normalizedRole === 'ADMIN') {
+    return ADMIN_ROLE;
+  }
+
+  if (
+    normalizedRole === DEFAULT_ROLE ||
+    normalizedRole === 'CUSTOMER' ||
+    normalizedRole === 'USER'
+  ) {
+    return DEFAULT_ROLE;
+  }
+
+  return DEFAULT_ROLE;
 };
 
 const normalizeUser = (user) => {
@@ -212,7 +225,30 @@ export function loadSessionToken() {
     return '';
   }
 
-  return String(window.localStorage.getItem('authToken') ?? '');
+  return String(window.localStorage.getItem(TOKEN_STORAGE_KEY) ?? '');
+}
+
+export function saveSessionToken(token) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const normalizedToken = String(token ?? '').trim();
+
+  if (!normalizedToken) {
+    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return;
+  }
+
+  window.localStorage.setItem(TOKEN_STORAGE_KEY, normalizedToken);
+}
+
+export function clearSessionToken() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
 export function clearSessionUser() {
@@ -223,4 +259,11 @@ export function clearSessionUser() {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
-export { ADMIN_ROLE, DEFAULT_ADMIN_USER, DEFAULT_ROLE, SESSION_STORAGE_KEY, USERS_STORAGE_KEY };
+export {
+  ADMIN_ROLE,
+  DEFAULT_ADMIN_USER,
+  DEFAULT_ROLE,
+  SESSION_STORAGE_KEY,
+  TOKEN_STORAGE_KEY,
+  USERS_STORAGE_KEY,
+};

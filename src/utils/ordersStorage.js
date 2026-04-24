@@ -126,6 +126,18 @@ export function saveOrder(order) {
   return normalizedOrder;
 }
 
+export function saveOrders(orders) {
+  const normalizedOrders = Array.isArray(orders) ? orders.map(normalizeOrder) : [];
+
+  if (typeof window === 'undefined') {
+    return normalizedOrders;
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedOrders));
+
+  return normalizedOrders;
+}
+
 export function loadOrdersByUserId(userId) {
   const normalizedUserId = String(userId ?? '').trim();
 

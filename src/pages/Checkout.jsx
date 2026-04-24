@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import useCart from '../hooks/useCart';
 import addressService from '../services/addressService';
-import cartService from '../services/cartService';
 import styles from '../styles/Checkout.module.css';
 import { calculateOrderTotals } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
@@ -13,8 +12,10 @@ const EMAIL_REGEX = /^[^@]+@[^@]+\.[^@]+$/;
 
 function Checkout({ onCompleteCheckout }) {
   const { currentUser: user } = useAuth();
-  const { cartItems } = useCart();
+  const { cart, cartItems } = useCart();
   const [addresses, setAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true);
+  const [addressesError, setAddressesError] = useState('');
   const [values, setValues] = useState({
     fullName: user?.fullName ?? user?.name ?? '',
     email: user?.email ?? '',
@@ -28,19 +29,50 @@ function Checkout({ onCompleteCheckout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userAddresses = addressService.getAddressesByUserId(user?.id);
-    const defaultAddress =
-      userAddresses.find((address) => address.isDefault) ?? userAddresses[0] ?? null;
+    let isMounted = true;
 
-    setAddresses(userAddresses);
-    setValues((currentValues) => ({
-      ...currentValues,
-      fullName: user?.fullName ?? user?.name ?? currentValues.fullName,
-      email: user?.email ?? currentValues.email,
-      phone: user?.phone ?? currentValues.phone,
-      shippingAddressId: defaultAddress?.id ?? currentValues.shippingAddressId,
-      billingAddressId: defaultAddress?.id ?? currentValues.billingAddressId,
-    }));
+    const loadAddresses = async () => {
+      setIsLoadingAddresses(true);
+      setAddressesError('');
+
+      try {
+        const userAddresses = await addressService.getAddressesByUserIdAsync(user?.id);
+        const defaultAddress =
+          userAddresses.find((address) => address.isDefault) ?? userAddresses[0] ?? null;
+
+        if (!isMounted) {
+          return;
+        }
+
+        setAddresses(userAddresses);
+        setValues((currentValues) => ({
+          ...currentValues,
+          fullName: user?.fullName ?? user?.name ?? currentValues.fullName,
+          email: user?.email ?? currentValues.email,
+          phone: user?.phone ?? currentValues.phone,
+          shippingAddressId: defaultAddress?.id ?? currentValues.shippingAddressId,
+          billingAddressId: defaultAddress?.id ?? currentValues.billingAddressId,
+        }));
+      } catch (error) {
+        if (isMounted) {
+          setAddressesError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar las direcciones de la cuenta.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingAddresses(false);
+        }
+      }
+    };
+
+    loadAddresses();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const shippingAddress = useMemo(
@@ -54,7 +86,6 @@ function Checkout({ onCompleteCheckout }) {
   );
 
   const totals = useMemo(() => calculateOrderTotals(cartItems), [cartItems]);
-  const cart = cartService.getCart();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -158,6 +189,8 @@ function Checkout({ onCompleteCheckout }) {
       <section className={styles.container}>
         <div className={styles.emptyState}>
           <h1 className={styles.title}>Checkout</h1>
+          <p className={styles.emptyText}>{isLoadingAddresses ? 'Cargando direcciones...' : ''}</p>
+          {addressesError ? <p className={styles.emptyText}>{addressesError}</p> : null}
           <p className={styles.emptyText}>
             Antes de continuar necesitas al menos una dirección guardada en tu cuenta.
           </p>

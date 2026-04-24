@@ -1,5 +1,5 @@
 import { appConfig } from '../config';
-import { loadSessionToken } from '../utils/authStorage';
+import { loadSessionToken, saveSessionToken } from '../utils/authStorage';
 import { loadCart, saveCart, saveCartItems } from '../utils/cartStorage';
 
 import { requestJson } from './http';
@@ -14,6 +14,31 @@ const normalizeCartResponse = (payload) =>
     ...payload,
     updatedAt: payload?.updatedAt ?? new Date().toISOString(),
   });
+
+const ensureRemoteCartSession = async () => {
+  const currentToken = loadSessionToken();
+
+  if (currentToken) {
+    return currentToken;
+  }
+
+  const response = await requestJson('/auth/guest-session', {
+    method: 'POST',
+  });
+  const nextToken = String(response?.sessionToken ?? response?.token ?? '').trim();
+
+  if (!nextToken) {
+    throw new Error('No fue posible inicializar la sesión invitada del carrito.');
+  }
+
+  saveSessionToken(nextToken);
+
+  if (response?.cart) {
+    normalizeCartResponse(response.cart);
+  }
+
+  return nextToken;
+};
 
 const buildLocalCart = (items, currentCart = loadCart()) =>
   saveCart({
@@ -134,7 +159,7 @@ async function getCartAsync() {
     return getCart();
   }
 
-  const token = loadSessionToken();
+  const token = await ensureRemoteCartSession();
   const response = await requestJson('/cart/me', {
     method: 'GET',
     token,
@@ -148,7 +173,7 @@ async function addToCartAsync(product, currentItems = getCartItems()) {
     return buildLocalCart(addToCart(product, currentItems)).items;
   }
 
-  const token = loadSessionToken();
+  const token = await ensureRemoteCartSession();
   const response = await requestJson('/cart/items', {
     method: 'POST',
     token,
@@ -166,7 +191,7 @@ async function updateCartItemQuantityAsync(productId, nextQuantity, currentItems
     return buildLocalCart(updateCartItemQuantity(productId, nextQuantity, currentItems)).items;
   }
 
-  const token = loadSessionToken();
+  const token = await ensureRemoteCartSession();
   const response = await requestJson(`/cart/items/${productId}`, {
     method: 'PATCH',
     token,
@@ -183,7 +208,7 @@ async function removeCartItemAsync(productId, currentItems = getCartItems()) {
     return buildLocalCart(removeCartItem(productId, currentItems)).items;
   }
 
-  const token = loadSessionToken();
+  const token = await ensureRemoteCartSession();
   const response = await requestJson(`/cart/items/${productId}`, {
     method: 'DELETE',
     token,
@@ -197,13 +222,32 @@ async function clearCartAsync() {
     return clearCart();
   }
 
-  const token = loadSessionToken();
+  const token = await ensureRemoteCartSession();
   await requestJson('/cart/items', {
     method: 'DELETE',
     token,
   });
 
   return saveCart({ ...loadCart(), items: [], updatedAt: new Date().toISOString() }).items;
+}
+
+async function mergeCartAsync(guestCartId) {
+  const normalizedGuestCartId = String(guestCartId ?? '').trim();
+
+  if (!normalizedGuestCartId || !appConfig.useRemoteApi) {
+    return getCart();
+  }
+
+  const token = loadSessionToken();
+  const response = await requestJson('/cart/merge', {
+    method: 'POST',
+    token,
+    body: {
+      guestCartId: normalizedGuestCartId,
+    },
+  });
+
+  return normalizeCartResponse(response);
 }
 
 const cartService = {
@@ -215,6 +259,7 @@ const cartService = {
   getCartAsync,
   getCartItemCount,
   getCartItems,
+  mergeCartAsync,
   persistCartItems,
   removeCartItem,
   removeCartItemAsync,

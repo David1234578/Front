@@ -7,7 +7,7 @@ import styles from '../styles/Navbar.module.css';
 function Navbar({ user, onSignOut, cartItemCount = 0 }) {
   const userLabel = user?.fullName ?? user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'ADMIN';
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();

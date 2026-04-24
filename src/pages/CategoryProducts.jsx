@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductDetailsModal from '../components/ProductDetailsModal';
 import useCart from '../hooks/useCart';
+import categoryService from '../services/categoryService';
 import productService from '../services/productService';
 import styles from '../styles/CategoryProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
@@ -13,7 +14,10 @@ function CategoryProducts() {
   const [query, setQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [productsState] = useState(productService.getProducts);
+  const [productsState, setProductsState] = useState([]);
+  const [resolvedCategory, setResolvedCategory] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const navigate = useNavigate();
   const { categoryName } = useParams();
 
@@ -21,6 +25,64 @@ function CategoryProducts() {
     () => (categoryName ? decodeURIComponent(categoryName) : null),
     [categoryName]
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCategoryProducts = async () => {
+      if (!category) {
+        setProductsState([]);
+        setResolvedCategory(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const categories = await categoryService.getCategoriesAsync();
+        const normalizedCategory = category.trim().toLowerCase();
+        const nextCategory =
+          categories.find(
+            (item) =>
+              String(item.slug ?? '')
+                .trim()
+                .toLowerCase() === normalizedCategory ||
+              String(item.name ?? '')
+                .trim()
+                .toLowerCase() === normalizedCategory
+          ) ?? null;
+        const nextProducts = await productService.getProductsAsync({
+          activeOnly: true,
+          ...(nextCategory?.id ? { categoryId: nextCategory.id } : { categoryName: category }),
+        });
+
+        if (isMounted) {
+          setResolvedCategory(nextCategory);
+          setProductsState(nextProducts);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar los productos de la categoría.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadCategoryProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [category]);
 
   const cartQuantityByProductId = useMemo(
     () => new Map(cartItems.map((item) => [item.id, item.quantity])),
@@ -34,7 +96,6 @@ function CategoryProducts() {
 
     return productsState.filter((product) => {
       if (product.isActive === false) return false;
-      if ((product.categoryName ?? product.category) !== category) return false;
       if (!q) return true;
 
       return String(product.name ?? '')
@@ -61,7 +122,7 @@ function CategoryProducts() {
         </button>
 
         <div className={styles.headerInfo}>
-          <h1 className={styles.title}>{category ?? 'Categoría'}</h1>
+          <h1 className={styles.title}>{resolvedCategory?.name ?? category ?? 'Categoría'}</h1>
           <p className={styles.subtitle}>Filtra por nombre para encontrar un producto</p>
         </div>
       </header>
@@ -77,6 +138,10 @@ function CategoryProducts() {
 
       {!category ? (
         <p className={styles.empty}>Selecciona una categoría desde Inicio.</p>
+      ) : isLoading ? (
+        <p className={styles.empty}>Cargando productos de la categoría...</p>
+      ) : loadError ? (
+        <p className={styles.empty}>{loadError}</p>
       ) : filteredProducts.length === 0 ? (
         <p className={styles.empty}>No hay productos para mostrar.</p>
       ) : (

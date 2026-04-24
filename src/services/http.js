@@ -1,4 +1,5 @@
 import { appConfig } from '../config';
+import { clearSessionToken, clearSessionUser } from '../utils/authStorage';
 
 const joinUrl = (baseUrl, path) => {
   const normalizedBase = String(baseUrl ?? '').replace(/\/$/, '');
@@ -32,10 +33,29 @@ export async function requestJson(path, options = {}) {
       signal: signal ?? controller.signal,
     });
 
-    const data = await response.json().catch(() => null);
+    const contentType = String(response.headers.get('content-type') ?? '').toLowerCase();
+    const hasJsonBody = contentType.includes('application/json');
+    const canHaveBody = ![204, 205].includes(response.status);
+    let data = null;
+
+    if (canHaveBody && hasJsonBody) {
+      data = await response.json().catch(() => null);
+    } else if (canHaveBody) {
+      const text = await response.text().catch(() => '');
+      data = text ? { message: text } : null;
+    }
+
+    if (response.status === 401) {
+      clearSessionUser();
+      clearSessionToken();
+    }
 
     if (!response.ok) {
-      throw new Error(data?.message ?? 'La solicitud al backend no se pudo completar.');
+      const error = new Error(data?.message ?? 'La solicitud al backend no se pudo completar.');
+      error.status = response.status;
+      error.code = data?.code ?? '';
+      error.payload = data;
+      throw error;
     }
 
     return data;

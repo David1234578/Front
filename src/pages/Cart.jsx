@@ -1,14 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 
 import useCart from '../hooks/useCart';
-import cartService from '../services/cartService';
 import styles from '../styles/Cart.module.css';
 import { calculateCartSubtotal } from '../utils/calculateOrderTotals';
 import { formatCOP } from '../utils/formatCOP';
 
 function Cart() {
-  const { cartItems, clearCart, removeCartItem, updateCartItemQuantity } = useCart();
-  const cart = cartService.getCart();
+  const { cart, cartItems, clearCart, removeCartItem, updateCartItemQuantity } = useCart();
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
   const subtotal = calculateCartSubtotal(cartItems);
   const navigate = useNavigate();

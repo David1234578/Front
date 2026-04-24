@@ -21,7 +21,6 @@ import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
-import cartService from './services/cartService';
 import orderService from './services/orderService';
 import { calculateOrderTotals } from './utils/calculateOrderTotals';
 
@@ -29,7 +28,7 @@ import './App.css';
 
 function App() {
   const { currentUser } = useAuth();
-  const { cartItemCount, cartItems, clearCart } = useCart();
+  const { cart, cartItemCount, cartItems, clearCart } = useCart();
   const [latestOrder, setLatestOrder] = useState(null);
 
   const handleCompleteCheckout = async ({
@@ -43,7 +42,6 @@ function App() {
       return null;
     }
 
-    const cart = cartService.getCart();
     const totals = calculateOrderTotals(cartItems);
     const order = await orderService.createOrderAsync({
       cartId: cart.id,
@@ -60,7 +58,7 @@ function App() {
     });
 
     setLatestOrder(order);
-    clearCart();
+    await clearCart();
     return order;
   };
 

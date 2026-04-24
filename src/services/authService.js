@@ -1,26 +1,30 @@
 import { appConfig } from '../config';
 import {
+  clearSessionToken,
   clearSessionUser,
   createUser,
   findUserByEmail,
+  loadSessionToken,
   loadSessionUser,
   loadUsers,
+  saveSessionToken,
   saveSessionUser,
   updateUser,
 } from '../utils/authStorage';
+import { saveCart } from '../utils/cartStorage';
 
+import cartService from './cartService';
 import { requestJson } from './http';
 
 const MIN_REGISTER_PASSWORD_LENGTH = 6;
 const MIN_CHANGE_PASSWORD_LENGTH = 8;
-const TOKEN_STORAGE_KEY = 'authToken';
 
 const normalizeRole = (role) => {
   const normalizedRole = String(role ?? '')
     .trim()
-    .toLowerCase();
+    .toUpperCase();
 
-  return normalizedRole === 'admin' ? 'admin' : 'user';
+  return normalizedRole === 'ADMIN' ? 'ADMIN' : 'CUSTOMER';
 };
 
 const getFullName = (firstName, lastName, fallback = '') => {
@@ -59,37 +63,6 @@ const toSessionUser = (user) => {
 const getErrorMessage = (error, fallback) =>
   error instanceof Error && error.message ? error.message : fallback;
 
-const loadSessionToken = () => {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-
-  return String(window.localStorage.getItem(TOKEN_STORAGE_KEY) ?? '');
-};
-
-const saveSessionToken = (token) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  const normalizedToken = String(token ?? '').trim();
-
-  if (!normalizedToken) {
-    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
-    return;
-  }
-
-  window.localStorage.setItem(TOKEN_STORAGE_KEY, normalizedToken);
-};
-
-const clearSessionToken = () => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(TOKEN_STORAGE_KEY);
-};
-
 const normalizeAuthResponse = (payload) => {
   const sessionUser = toSessionUser(payload?.user ?? payload);
 
@@ -100,6 +73,10 @@ const normalizeAuthResponse = (payload) => {
   saveSessionUser(sessionUser);
   saveSessionToken(payload?.sessionToken ?? payload?.token);
 
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'cart') && payload.cart) {
+    saveCart(payload.cart);
+  }
+
   return {
     ok: true,
     user: sessionUser,
@@ -108,6 +85,42 @@ const normalizeAuthResponse = (payload) => {
     expiresAt: String(payload?.expiresAt ?? ''),
     cart: payload?.cart ?? null,
   };
+};
+
+const buildRemoteAuthPayload = (payload) => {
+  const guestCartId = String(payload?.guestCartId ?? '').trim();
+  const phone = String(payload?.phone ?? '').trim();
+
+  return {
+    ...payload,
+    ...(phone ? { phone } : {}),
+    ...(guestCartId ? { guestCartId } : {}),
+  };
+};
+
+const syncRemoteCartAfterAuth = async (result, payload = {}) => {
+  if (!appConfig.useRemoteApi || !result?.ok) {
+    return result;
+  }
+
+  if (result.cart) {
+    return result;
+  }
+
+  const guestCartId = String(payload?.guestCartId ?? '').trim();
+
+  try {
+    const cart = guestCartId
+      ? await cartService.mergeCartAsync(guestCartId)
+      : await cartService.getCartAsync();
+
+    return {
+      ...result,
+      cart,
+    };
+  } catch {
+    return result;
+  }
 };
 
 function registerLocal({ firstName, lastName, email, password, phone }) {
@@ -171,10 +184,10 @@ async function register(payload) {
   try {
     const response = await requestJson('/auth/register', {
       method: 'POST',
-      body: payload,
+      body: buildRemoteAuthPayload(payload),
     });
 
-    return normalizeAuthResponse(response);
+    return await syncRemoteCartAfterAuth(normalizeAuthResponse(response), payload);
   } catch (error) {
     return {
       ok: false,
@@ -191,10 +204,10 @@ async function login(payload) {
   try {
     const response = await requestJson('/auth/login', {
       method: 'POST',
-      body: payload,
+      body: buildRemoteAuthPayload(payload),
     });
 
-    return normalizeAuthResponse(response);
+    return await syncRemoteCartAfterAuth(normalizeAuthResponse(response), payload);
   } catch (error) {
     return {
       ok: false,
@@ -222,7 +235,7 @@ async function hydrateSession() {
       token,
     });
 
-    return normalizeAuthResponse({ user: response, token });
+    return await syncRemoteCartAfterAuth(normalizeAuthResponse({ user: response, token }));
   } catch (error) {
     clearSessionUser();
     clearSessionToken();

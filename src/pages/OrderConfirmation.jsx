@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { appConfig } from '../config';
 import styles from '../styles/OrderConfirmation.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
@@ -18,6 +19,7 @@ const formatAddressLines = (address) => {
 
 function OrderConfirmation({ order, onBackHome }) {
   const navigate = useNavigate();
+  const isRemoteMode = appConfig.useRemoteApi;
 
   const handleBackHome = () => {
     onBackHome();
@@ -57,8 +59,9 @@ function OrderConfirmation({ order, onBackHome }) {
         <p className={styles.eyebrow}>Compra confirmada</p>
         <h1 className={styles.title}>Tu pedido quedó registrado</h1>
         <p className={styles.subtitle}>
-          Guarda este resumen para seguimiento. El carrito ya se vació y la orden quedó persistida
-          localmente.
+          {isRemoteMode
+            ? 'Guarda este resumen para seguimiento. El carrito ya se vació y la orden quedó registrada en el backend.'
+            : 'Guarda este resumen para seguimiento. El carrito ya se vació y la orden quedó persistida localmente.'}
         </p>
 
         <div className={styles.metaGrid}>

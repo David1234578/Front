@@ -23,3 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local handoff and integration notes
+ETAPA14_HANDOFF_FRONTEND_DEMO.md

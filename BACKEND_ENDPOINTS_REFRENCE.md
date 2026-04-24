@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento resume, endpoint por endpoint, la API HTTP disponible al cerrar `etapa13`.
+Este documento resume, endpoint por endpoint, la API HTTP disponible al cerrar `etapa14`.
 
 Está pensado para el equipo de frontend y QA como referencia rápida del backend funcional.
 
@@ -142,6 +142,7 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 
 ### Regla
 - `fullName` ya es calculado y devuelto por backend; frontend no necesita construirlo
+- `role` se expone con el valor exacto de `Role.name`; para integración actual los valores esperados son `ADMIN` y `CUSTOMER`
 
 ---
 
@@ -225,6 +226,40 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - **GET** `/api/v1/categories/tree`
 - **Auth requerida:** no
 - **Response:** `200 OK`
+
+### Regla
+- responde una lista de categorías raíz
+- cada nodo usa el mismo shape recursivo de `CategoryResponse`
+- `subcategories` puede venir anidado para representar la jerarquía completa
+
+### Shape real de ejemplo
+```json
+[
+  {
+    "id": 1,
+    "parentId": null,
+    "parentName": null,
+    "name": "Electronics",
+    "slug": "electronics",
+    "isRoot": true,
+    "subcategoriesCount": 2,
+    "productsCount": 0,
+    "subcategories": [
+      {
+        "id": 2,
+        "parentId": 1,
+        "parentName": "Electronics",
+        "name": "Computers",
+        "slug": "computers",
+        "isRoot": false,
+        "subcategoriesCount": 0,
+        "productsCount": 1,
+        "subcategories": []
+      }
+    ]
+  }
+]
+```
 
 ## 2.3 Obtener categoría por ID
 - **GET** `/api/v1/categories/{id}`
@@ -326,6 +361,27 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - **Body:** no
 - **Response:** `200 OK`
 
+### Respuesta
+```json
+{
+  "id": 101,
+  "userId": 1,
+  "type": "BILLING",
+  "line1": "Carrera 20 #50-10",
+  "line2": null,
+  "city": "Medellin",
+  "state": "Antioquia",
+  "country": "Colombia",
+  "postalCode": "050001",
+  "isDefault": true
+}
+```
+
+### Errores esperados
+- `400 VALIDATION_ERROR` si la dirección no pertenece al usuario autenticado
+- `401 UNAUTHORIZED`
+- `404 RESOURCE_NOT_FOUND`
+
 ## 4.6 Eliminar dirección
 - **DELETE** `/api/v1/users/me/addresses/{id}`
 - **Auth requerida:** sí
@@ -405,6 +461,12 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 }
 ```
 
+### Comportamiento cuando `guestCartId` no es válido
+- si el carrito no existe: `404 RESOURCE_NOT_FOUND`
+- si el carrito existe pero no está en estado `OPEN`: `409 INVALID_CART_STATE`
+- si el carrito existe pero ya tiene usuario asignado: `409 CART_MERGE_ERROR`
+- si el merge supera el stock disponible: `409 INSUFFICIENT_STOCK`
+
 ### Shape de carrito
 ```json
 {
@@ -453,6 +515,11 @@ Está pensado para el equipo de frontend y QA como referencia rápida del backen
 - **GET** `/api/v1/orders/me`
 - **Auth requerida:** sí
 - **Response:** `200 OK`
+
+### Regla
+- si el usuario no tiene órdenes, responde arreglo vacío `[]`
+- no responde `null`
+- no responde `404`
 
 ## 6.3 Obtener detalle de orden
 - **GET** `/api/v1/orders/{id}`

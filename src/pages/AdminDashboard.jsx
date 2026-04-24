@@ -57,7 +57,7 @@ function AdminDashboard() {
       totalOrders: orders.length,
       totalRevenue: formatCOP(totalRevenue),
       totalUsers: users.length,
-      adminUsers: users.filter((user) => user.role === 'admin').length,
+      adminUsers: users.filter((user) => user.role === 'ADMIN').length,
     };
   }, [orders, products, users]);
 
@@ -181,7 +181,7 @@ function AdminDashboard() {
                     <span>{user.email}</span>
                   </div>
                   <span className={styles.roleBadge}>
-                    {user.role === 'admin' ? 'Administrador' : 'Cliente'}
+                    {user.role === 'ADMIN' ? 'Administrador' : 'Cliente'}
                   </span>
                 </article>
               ))}

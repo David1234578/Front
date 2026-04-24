@@ -116,7 +116,7 @@ function AuthProvider({ children }) {
     changePassword,
     currentUser,
     isAuthenticated: Boolean(currentUser),
-    isAdmin: currentUser?.role === 'admin',
+    isAdmin: currentUser?.role === 'ADMIN',
     isHydratingSession,
     isSubmittingAuth,
     login,

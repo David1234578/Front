@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'cartItems';
+const CART_UPDATED_EVENT = 'cart:changed';
 
 const createLocalCartId = () => `CART-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -117,8 +118,10 @@ export function saveCart(cart) {
   }
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedCart));
+  window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT, { detail: normalizedCart }));
 
   return normalizedCart;
 }
 
 export const CART_STORAGE_KEY = STORAGE_KEY;
+export { CART_UPDATED_EVENT };

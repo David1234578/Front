@@ -1,9 +1,30 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import { appConfig } from '../config';
 import useAuth from '../hooks/useAuth';
+import cartService from '../services/cartService';
 import styles from '../styles/AuthPage.module.css';
 import { DEFAULT_ADMIN_USER } from '../utils/authStorage';
+
+const REMOTE_DEMO_CREDENTIALS = {
+  admin: {
+    email: 'admin.demo@pps.com',
+    password: 'Admin12345*',
+  },
+  customer: {
+    email: 'customer.demo@pps.com',
+    password: 'Customer12345*',
+  },
+  guestToken: 'demo-guest-session-token',
+};
+
+const fillDemoCredentials = (setValues, credentials) => {
+  setValues({
+    email: credentials.email,
+    password: credentials.password,
+  });
+};
 
 function Login() {
   const [values, setValues] = useState({ email: '', password: '' });
@@ -11,6 +32,7 @@ function Login() {
   const { authError, clearAuthError, isSubmittingAuth, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isRemoteMode = appConfig.useRemoteApi;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -22,8 +44,11 @@ function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const guestCartId = String(cartService.getCart()?.id ?? '').trim();
+
     const result = await login({
       email: values.email.trim(),
+      guestCartId,
       password: values.password,
     });
 
@@ -47,10 +72,50 @@ function Login() {
         </p>
 
         <div className={styles.infoBox}>
-          <strong>Credenciales demo de administrador</strong>
+          <strong>
+            {isRemoteMode ? 'Credenciales seed demo backend' : 'Credenciales demo locales'}
+          </strong>
           <div className={styles.credentialsList}>
-            <span className={styles.credentialRow}>Correo: {DEFAULT_ADMIN_USER.email}</span>
-            <span className={styles.credentialRow}>Contraseña: {DEFAULT_ADMIN_USER.password}</span>
+            {isRemoteMode ? (
+              <>
+                <span className={styles.credentialRow}>
+                  Admin: {REMOTE_DEMO_CREDENTIALS.admin.email} /{' '}
+                  {REMOTE_DEMO_CREDENTIALS.admin.password}
+                </span>
+                <span className={styles.credentialRow}>
+                  Customer: {REMOTE_DEMO_CREDENTIALS.customer.email} /{' '}
+                  {REMOTE_DEMO_CREDENTIALS.customer.password}
+                </span>
+                <span className={styles.credentialRow}>
+                  Guest token demo: {REMOTE_DEMO_CREDENTIALS.guestToken}
+                </span>
+                <div className={styles.demoActions}>
+                  <button
+                    type="button"
+                    className={styles.demoActionButton}
+                    disabled={isSubmittingAuth}
+                    onClick={() => fillDemoCredentials(setValues, REMOTE_DEMO_CREDENTIALS.customer)}
+                  >
+                    Usar customer demo
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.demoActionButton}
+                    disabled={isSubmittingAuth}
+                    onClick={() => fillDemoCredentials(setValues, REMOTE_DEMO_CREDENTIALS.admin)}
+                  >
+                    Usar admin demo
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className={styles.credentialRow}>Correo: {DEFAULT_ADMIN_USER.email}</span>
+                <span className={styles.credentialRow}>
+                  Contraseña: {DEFAULT_ADMIN_USER.password}
+                </span>
+              </>
+            )}
           </div>
         </div>
 

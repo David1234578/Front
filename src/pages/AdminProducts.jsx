@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
+import categoryService from '../services/categoryService';
 import productService from '../services/productService';
 import adminStyles from '../styles/AdminProducts.module.css';
 import productListStyles from '../styles/ProductList.module.css';
 
 function AdminProducts() {
   const navigate = useNavigate();
+  const [categoriesState, setCategoriesState] = useState([]);
   const [productsState, setProductsState] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,10 +28,14 @@ function AdminProducts() {
       setLoadError('');
 
       try {
-        const nextProducts = await productService.getProductsAsync();
+        const [nextProducts, nextCategories] = await Promise.all([
+          productService.getProductsAsync(),
+          categoryService.getCategoriesAsync(),
+        ]);
 
         if (isMounted) {
           setProductsState(nextProducts);
+          setCategoriesState(nextCategories);
         }
       } catch (error) {
         if (isMounted) {
@@ -180,6 +186,7 @@ function AdminProducts() {
 
       {isFormOpen ? (
         <ProductForm
+          categories={categoriesState}
           initialValues={editingProduct}
           isEditing={Boolean(editingProduct)}
           isSubmitting={isSaving}

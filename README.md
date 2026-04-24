@@ -148,12 +148,28 @@ Variables soportadas:
 - `VITE_USE_REMOTE_API`
 - `VITE_API_BASE_URL`
 - `VITE_API_TIMEOUT_MS`
+- `VITE_DEV_PROXY_TARGET`
 
 Por defecto:
 
 - la app usa fallback local
-- la base de API es `/api`
+- la base de API es `/api/v1`
 - el timeout base es `10000ms`
+
+Para desarrollo local con backend Spring Boot arriba en `localhost:8080`, se puede usar:
+
+```bash
+cp .env.example .env
+npm run dev
+```
+
+Con esta configuración:
+
+- `VITE_USE_REMOTE_API=true`
+- `VITE_API_BASE_URL=/api/v1`
+- `VITE_DEV_PROXY_TARGET=http://localhost:8080`
+
+El proxy de Vite redirige `/api/*` al backend local para evitar problemas de origen cruzado durante la demo e integración.
 
 Para el contrato mínimo de integración, revisar `CONTRATO_API_MINIMO.md`.
 
