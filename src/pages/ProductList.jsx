@@ -2,29 +2,13 @@ import { useEffect, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
-import { products } from '../data/products';
 import styles from '../styles/ProductList.module.css';
+import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
 
-const STORAGE_KEY = 'products';
+const STORAGE_KEY = PRODUCTS_STORAGE_KEY;
 
 function ProductList() {
-  const [productsState, setProductsState] = useState(() => {
-    if (typeof window === 'undefined') {
-      return products;
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return products;
-    }
-
-    try {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : products;
-    } catch {
-      return products;
-    }
-  });
+  const [productsState, setProductsState] = useState(loadProducts);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -112,6 +96,7 @@ function ProductList() {
                 name={product.name}
                 category={product.category}
                 price={product.price}
+                rating={product.rating}
                 stock={product.stock}
                 image={product.image}
                 description={product.description}

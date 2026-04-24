@@ -3,7 +3,18 @@ import { useState } from 'react';
 import styles from '../styles/ProductCard.module.css';
 import { formatCOP } from '../utils/formatCOP';
 
-function ProductCard({ name, category, price, stock, image, description, onEdit, onDelete }) {
+function ProductCard({
+  name,
+  category,
+  price,
+  stock,
+  image,
+  description,
+  rating,
+  onDetails,
+  onEdit,
+  onDelete,
+}) {
   const [likes, setLikes] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -23,6 +34,9 @@ function ProductCard({ name, category, price, stock, image, description, onEdit,
       <div className={styles.productInfo}>
         <span className={styles.productCategory}>{category}</span>
         <h3 className={styles.productName}>{name}</h3>
+        {Number.isFinite(Number(rating)) ? (
+          <p className={styles.productRating}>Calificación: {Number(rating)}/5</p>
+        ) : null}
         <p className={styles.productDescription}>{description}</p>
         <p className={styles.productStock}>Stock: {stock}</p>
         <div className={styles.productFooter}>
@@ -35,8 +49,14 @@ function ProductCard({ name, category, price, stock, image, description, onEdit,
           </button>
         </div>
 
-        {onEdit || onDelete ? (
+        {onDetails || onEdit || onDelete ? (
           <div className={styles.cardActions}>
+            {onDetails ? (
+              <button type="button" className={styles.btnDetails} onClick={onDetails}>
+                Más información
+              </button>
+            ) : null}
+
             {onEdit ? (
               <button type="button" className={styles.btnEdit} onClick={onEdit}>
                 Editar

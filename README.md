@@ -1,6 +1,86 @@
-# React + Vite
+# Sistema de Ventas (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Proyecto didáctico para practicar React (componentes, props, estado, formularios controlados) con una app simple de catálogo/ventas.
+
+## Requisitos
+
+- Node.js 18+ (recomendado)
+
+## Instalar y ejecutar
+
+- Instalar: npm install
+- Desarrollo: npm run dev
+- Lint: npm run lint
+- Build: npm run build
+- Preview: npm run preview
+
+## Notas
+
+- La carpeta clases/ existe en el workspace como documentación del curso, pero no forma parte del repo del proyecto.
+
+---
+
+## Estructura principal
+
+src/
+components/
+Header.jsx
+Navbar.jsx
+Footer.jsx
+ProductCard.jsx
+ProductForm.jsx
+ProductDetailsModal.jsx
+pages/
+Home.jsx
+ProductList.jsx
+Cart.jsx
+data/
+products.js
+styles/
+\*.module.css
+utils/
+formatCOP.js
+
+## Navegación (sin router)
+
+La app no usa react-router-dom todavía. En su lugar, se navega por estado local en src/App.jsx:
+
+- home: Inicio
+- products: Productos (CRUD)
+- cart: Carrito
+- category: Productos por categoría
+
+## Funcionalidades por pantalla
+
+### Inicio
+
+En src/pages/Home.jsx:
+
+- Una sola grilla de categorías.
+- Cada categoría muestra solo la imagen del producto destacado (mejor rating; en empate se conserva el primero).
+- Al hacer clic en una categoría, navega a la página de productos de esa categoría.
+
+### Categoría
+
+En src/pages/CategoryProducts.jsx:
+
+- Lista los productos de la categoría seleccionada.
+- Permite filtrar por nombre (input de búsqueda).
+- Botón "Más información" abre un modal con el detalle del producto.
+
+### Productos (CRUD en memoria + persistencia)
+
+En src/pages/ProductList.jsx:
+
+- Agregar / editar / eliminar productos con src/components/ProductForm.jsx.
+- Persistencia en localStorage bajo la clave products.
+- Compatibilidad: si hay productos guardados sin rating, se normaliza con un valor por defecto.
+
+## Datos
+
+El seed inicial está en src/data/products.js. Incluye rating para ordenar en Inicio.
+
+## Referencia (template)
 
 Currently, two official plugins are available:
 
