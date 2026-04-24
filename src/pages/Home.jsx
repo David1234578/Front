@@ -51,6 +51,9 @@ function Home({ onOpenCategory }) {
             aria-label={`Ver productos de ${category}`}
           >
             <img className={homeStyles.categoryImage} src={product.image} alt={product.name} />
+            <span className={homeStyles.categoryLabel} aria-hidden="true">
+              <span className={homeStyles.categoryLabelText}>{category}</span>
+            </span>
           </button>
         ))}
       </div>

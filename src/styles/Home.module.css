@@ -53,6 +53,7 @@
 }
 
 .categoryTile {
+  position: relative;
   border: none;
   padding: 0;
   border-radius: 12px;
@@ -79,4 +80,31 @@
   height: 220px;
   object-fit: cover;
   display: block;
+}
+
+.categoryLabel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  pointer-events: none;
+}
+
+.categoryLabel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gray-900);
+  opacity: 0.65;
+}
+
+.categoryLabelText {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-weight: 900;
+  font-size: 1rem;
+  letter-spacing: 0.2px;
 }
