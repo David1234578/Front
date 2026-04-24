@@ -211,11 +211,133 @@ function listUsers() {
   return loadUsers();
 }
 
-function updateProfile(userId, updates) {
-  return updateUser(userId, updates);
+async function updateProfile(userId, updates) {
+  const normalizedUserId = String(userId ?? '').trim();
+
+  if (!normalizedUserId) {
+    return { ok: false, error: 'No existe una sesión válida para actualizar el perfil.' };
+  }
+
+  const profileUpdates = {
+    name: String(updates?.name ?? '').trim(),
+    phone: String(updates?.phone ?? '').trim(),
+    address: String(updates?.address ?? '').trim(),
+    city: String(updates?.city ?? '').trim(),
+    postalCode: String(updates?.postalCode ?? '').trim(),
+  };
+
+  if (!profileUpdates.name) {
+    return { ok: false, error: 'El nombre es obligatorio para actualizar el perfil.' };
+  }
+
+  if (!appConfig.useRemoteApi) {
+    const updatedUser = updateUser(normalizedUserId, profileUpdates);
+
+    if (!updatedUser) {
+      return { ok: false, error: 'No fue posible actualizar el perfil actual.' };
+    }
+
+    return { ok: true, user: updatedUser };
+  }
+
+  try {
+    const token = loadSessionToken();
+    const response = await requestJson('/auth/profile', {
+      method: 'PATCH',
+      body: profileUpdates,
+      token,
+    });
+
+    const normalizedResponse = response?.user
+      ? normalizeAuthResponse({ ...response, token: response.token ?? token })
+      : normalizeAuthResponse({ user: response, token });
+
+    if (!normalizedResponse.ok) {
+      return normalizedResponse;
+    }
+
+    return { ok: true, user: normalizedResponse.user };
+  } catch (error) {
+    return {
+      ok: false,
+      error: getErrorMessage(error, 'No fue posible actualizar el perfil en este momento.'),
+    };
+  }
+}
+
+async function changePassword(userId, currentPassword, newPassword) {
+  const normalizedUserId = String(userId ?? '').trim();
+
+  if (!normalizedUserId) {
+    return { ok: false, error: 'No existe una sesión válida para cambiar la contraseña.' };
+  }
+
+  if (!currentPassword) {
+    return { ok: false, error: 'Debes ingresar la contraseña actual.' };
+  }
+
+  if (!newPassword || newPassword.length < MIN_PASSWORD_LENGTH) {
+    return {
+      ok: false,
+      error: `La nueva contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+    };
+  }
+
+  if (currentPassword === newPassword) {
+    return { ok: false, error: 'La nueva contraseña debe ser diferente a la actual.' };
+  }
+
+  if (!appConfig.useRemoteApi) {
+    const user = loadUsers().find((savedUser) => savedUser.id === normalizedUserId) ?? null;
+
+    if (!user || user.password !== currentPassword) {
+      return { ok: false, error: 'La contraseña actual es incorrecta.' };
+    }
+
+    const updatedUser = updateUser(normalizedUserId, { password: newPassword });
+
+    if (!updatedUser) {
+      return { ok: false, error: 'No fue posible actualizar la contraseña.' };
+    }
+
+    return { ok: true, user: updatedUser };
+  }
+
+  try {
+    const token = loadSessionToken();
+    const response = await requestJson('/auth/change-password', {
+      method: 'POST',
+      body: {
+        currentPassword,
+        newPassword,
+      },
+      token,
+    });
+
+    if (response?.user) {
+      const normalizedResponse = normalizeAuthResponse({
+        ...response,
+        token: response.token ?? token,
+      });
+
+      if (!normalizedResponse.ok) {
+        return normalizedResponse;
+      }
+
+      return { ok: true, user: normalizedResponse.user };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: getErrorMessage(error, 'No fue posible cambiar la contraseña en este momento.'),
+    };
+  }
 }
 
 const authService = {
+  changePassword,
   hydrateSession,
   getSessionUser,
   listUsers,

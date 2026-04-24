@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 
 import authService from '../services/authService';
 
@@ -78,25 +78,52 @@ function AuthProvider({ children }) {
     setCurrentUser(null);
   };
 
+  const updateProfile = async (updates) => {
+    setAuthError('');
+
+    const result = await authService.updateProfile(currentUser?.id, updates);
+
+    if (result.ok && result.user) {
+      setCurrentUser(result.user);
+    } else if (!result.ok) {
+      setAuthError(result.error ?? 'No fue posible actualizar el perfil.');
+    }
+
+    return result;
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    setAuthError('');
+
+    const result = await authService.changePassword(currentUser?.id, currentPassword, newPassword);
+
+    if (result.ok && result.user) {
+      setCurrentUser(result.user);
+    } else if (!result.ok) {
+      setAuthError(result.error ?? 'No fue posible cambiar la contraseña.');
+    }
+
+    return result;
+  };
+
   const clearAuthError = () => {
     setAuthError('');
   };
 
-  const value = useMemo(
-    () => ({
-      authError,
-      clearAuthError,
-      currentUser,
-      isAuthenticated: Boolean(currentUser),
-      isAdmin: currentUser?.role === 'admin',
-      isHydratingSession,
-      isSubmittingAuth,
-      login,
-      logout,
-      register,
-    }),
-    [authError, currentUser, isHydratingSession, isSubmittingAuth]
-  );
+  const value = {
+    authError,
+    clearAuthError,
+    changePassword,
+    currentUser,
+    isAuthenticated: Boolean(currentUser),
+    isAdmin: currentUser?.role === 'admin',
+    isHydratingSession,
+    isSubmittingAuth,
+    login,
+    logout,
+    register,
+    updateProfile,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -37,7 +37,11 @@
 }
 
 .headerActions,
-.layout {
+.layout,
+.accountColumn,
+.fieldGrid,
+.fieldGridSingle,
+.form {
   display: grid;
   gap: 1rem;
 }
@@ -48,6 +52,10 @@
 
 .layout {
   grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.9fr);
+}
+
+.accountColumn {
+  align-content: start;
 }
 
 .card,
@@ -70,10 +78,41 @@
   font-weight: 900;
 }
 
+.sectionHeader,
+.sectionHeaderCompact {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.sectionHeader {
+  margin-bottom: 1rem;
+}
+
+.sectionHeaderCompact {
+  margin-bottom: 0.75rem;
+}
+
+.sectionText,
+.helper {
+  margin: 0;
+  color: var(--gray-500);
+  font-weight: 700;
+}
+
 .infoGrid,
 .statsGrid {
   display: grid;
   gap: 0.85rem;
+}
+
+.fieldGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fieldGridSingle {
+  grid-template-columns: 1fr;
 }
 
 .infoGrid {
@@ -97,6 +136,70 @@
   color: var(--gray-500);
   font-size: 0.85rem;
   font-weight: 800;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.form {
+  margin-top: 0.25rem;
+}
+
+.input {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  outline: none;
+  color: var(--gray-900);
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+.input:disabled {
+  background: var(--gray-100);
+  cursor: not-allowed;
+}
+
+.error,
+.errorBanner,
+.successBanner {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.error,
+.errorBanner {
+  color: var(--danger);
+}
+
+.successBanner {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: #ecfdf3;
+  color: #047857;
+}
+
+.errorBanner {
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: #fff1f2;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .infoItem strong,
@@ -146,6 +249,12 @@
   background: var(--gray-100);
 }
 
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
 @media (max-width: 960px) {
   .layout,
   .statsGrid {
@@ -156,6 +265,22 @@
 @media (max-width: 720px) {
   .header,
   .headerActions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .infoGrid,
+  .fieldGrid,
+  .sectionHeader,
+  .sectionHeaderCompact,
+  .formActions {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader,
+  .sectionHeaderCompact,
+  .formActions {
     display: flex;
     flex-direction: column;
     align-items: stretch;
