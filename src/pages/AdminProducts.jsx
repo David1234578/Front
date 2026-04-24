@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import ProductCard from '../components/ProductCard';
@@ -9,10 +9,49 @@ import productListStyles from '../styles/ProductList.module.css';
 
 function AdminProducts() {
   const navigate = useNavigate();
-  const [productsState, setProductsState] = useState(productService.getProducts);
+  const [productsState, setProductsState] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [query, setQuery] = useState('');
+  const [submitError, setSubmitError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const nextProducts = await productService.getProductsAsync();
+
+        if (isMounted) {
+          setProductsState(nextProducts);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar los productos del panel admin.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -31,23 +70,51 @@ function AdminProducts() {
   }, [productsState, query]);
 
   const handleOpenCreate = () => {
+    setSubmitError('');
     setEditingProduct(null);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
+    setSubmitError('');
     setEditingProduct(null);
     setIsFormOpen(false);
   };
 
-  const handleAddProduct = (product) => {
-    setProductsState((currentProducts) => productService.createProduct(product, currentProducts));
+  const handleAddProduct = async (product) => {
+    setIsSaving(true);
+    setSubmitError('');
 
-    handleCloseForm();
+    try {
+      const nextProducts = await productService.createProductAsync(product, productsState);
+      setProductsState(nextProducts);
+      handleCloseForm();
+      return { ok: true };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible crear el producto.';
+      setSubmitError(message);
+      return { ok: false, error: message };
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteProduct = (productId) => {
-    setProductsState((currentProducts) => productService.deleteProduct(productId, currentProducts));
+  const handleDeleteProduct = async (productId) => {
+    setSubmitError('');
+
+    try {
+      const nextProducts = await productService.deleteProductAsync(productId, productsState);
+      setProductsState(nextProducts);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible eliminar el producto seleccionado.'
+      );
+    }
 
     if (editingProduct?.id === productId) {
       handleCloseForm();
@@ -55,15 +122,30 @@ function AdminProducts() {
   };
 
   const handleEditStart = (product) => {
+    setSubmitError('');
     setEditingProduct(product);
     setIsFormOpen(true);
   };
 
-  const handleEditSubmit = (updatedProduct) => {
-    setProductsState((currentProducts) =>
-      productService.updateProduct(updatedProduct, currentProducts)
-    );
-    handleCloseForm();
+  const handleEditSubmit = async (updatedProduct) => {
+    setIsSaving(true);
+    setSubmitError('');
+
+    try {
+      const nextProducts = await productService.updateProductAsync(updatedProduct, productsState);
+      setProductsState(nextProducts);
+      handleCloseForm();
+      return { ok: true };
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible actualizar el producto.';
+      setSubmitError(message);
+      return { ok: false, error: message };
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -99,8 +181,10 @@ function AdminProducts() {
         <ProductForm
           initialValues={editingProduct}
           isEditing={Boolean(editingProduct)}
+          isSubmitting={isSaving}
           onCancel={handleCloseForm}
           onSubmit={editingProduct ? handleEditSubmit : handleAddProduct}
+          submitError={submitError}
         />
       ) : (
         <>
@@ -108,6 +192,7 @@ function AdminProducts() {
             <div className={productListStyles.filters}>
               <input
                 className={productListStyles.searchInput}
+                disabled={isLoading}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar por nombre, categoría o descripción..."
@@ -115,12 +200,31 @@ function AdminProducts() {
               />
             </div>
 
-            <button className={productListStyles.btnAdd} type="button" onClick={handleOpenCreate}>
+            <button
+              className={productListStyles.btnAdd}
+              type="button"
+              onClick={handleOpenCreate}
+              disabled={isLoading}
+            >
               Agregar producto
             </button>
           </div>
 
-          {filteredProducts.length === 0 ? (
+          {submitError ? (
+            <div className={productListStyles.emptyState}>
+              <p>{submitError}</p>
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <div className={productListStyles.emptyState}>
+              <p>Cargando productos del panel admin...</p>
+            </div>
+          ) : loadError ? (
+            <div className={productListStyles.emptyState}>
+              <p>{loadError}</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className={productListStyles.emptyState}>
               <p>No hay productos que coincidan con la búsqueda actual.</p>
             </div>

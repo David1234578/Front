@@ -3,8 +3,12 @@ import { Navigate, useLocation } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
 function AdminRoute({ children }) {
-  const { isAdmin, isAuthenticated } = useAuth();
+  const { isAdmin, isAuthenticated, isHydratingSession } = useAuth();
   const location = useLocation();
+
+  if (isHydratingSession) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

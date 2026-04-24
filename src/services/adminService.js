@@ -10,8 +10,22 @@ function getDashboardSnapshot() {
   };
 }
 
+async function getDashboardSnapshotAsync() {
+  const [products, orders] = await Promise.all([
+    productService.getProductsAsync(),
+    orderService.getOrdersAsync(),
+  ]);
+
+  return {
+    products,
+    orders,
+    users: authService.listUsers(),
+  };
+}
+
 const adminService = {
   getDashboardSnapshot,
+  getDashboardSnapshotAsync,
 };
 
 export { adminService };

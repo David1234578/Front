@@ -11,32 +11,33 @@ function Register() {
     password: '',
     confirmPassword: '',
   });
-  const [error, setError] = useState('');
-  const { register } = useAuth();
+  const [formError, setFormError] = useState('');
+  const { authError, clearAuthError, isSubmittingAuth, register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setValues((currentValues) => ({ ...currentValues, [name]: value }));
-    setError('');
+    setFormError('');
+    clearAuthError();
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (values.password !== values.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setFormError('Las contraseñas no coinciden.');
       return;
     }
 
-    const result = register({
+    const result = await register({
       name: values.name,
       email: values.email,
       password: values.password,
     });
 
     if (!result.ok) {
-      setError(result.error);
+      setFormError(result.error ?? 'No fue posible crear la cuenta.');
       return;
     }
 
@@ -58,6 +59,7 @@ function Register() {
             <span className={styles.label}>Nombre</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="name"
               value={values.name}
               onChange={handleChange}
@@ -69,6 +71,7 @@ function Register() {
             <span className={styles.label}>Correo electrónico</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="email"
               value={values.email}
               onChange={handleChange}
@@ -81,6 +84,7 @@ function Register() {
             <span className={styles.label}>Contraseña</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="password"
               value={values.password}
               onChange={handleChange}
@@ -93,6 +97,7 @@ function Register() {
             <span className={styles.label}>Confirmar contraseña</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="confirmPassword"
               value={values.confirmPassword}
               onChange={handleChange}
@@ -101,10 +106,10 @@ function Register() {
             />
           </label>
 
-          {error ? <p className={styles.error}>{error}</p> : null}
+          {formError || authError ? <p className={styles.error}>{formError || authError}</p> : null}
 
-          <button type="submit" className={styles.primaryButton}>
-            Crear cuenta
+          <button type="submit" className={styles.primaryButton} disabled={isSubmittingAuth}>
+            {isSubmittingAuth ? 'Creando cuenta...' : 'Crear cuenta'}
           </button>
         </form>
 

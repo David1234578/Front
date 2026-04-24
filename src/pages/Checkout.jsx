@@ -23,6 +23,8 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
     paymentMethod: PAYMENT_METHODS[0].id,
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +56,8 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
       ...currentErrors,
       [name]: '',
     }));
+
+    setSubmitError('');
   };
 
   const validateValues = () => {
@@ -74,33 +78,46 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validateValues();
     setErrors(nextErrors);
+    setSubmitError('');
 
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
-    const order = onCompleteCheckout({
-      customer: {
-        fullName: values.fullName.trim(),
-        email: values.email.trim(),
-        phone: values.phone.trim(),
-        address: values.address.trim(),
-        city: values.city.trim(),
-        postalCode: values.postalCode.trim(),
-      },
-      shippingMethodId: values.shippingMethod,
-      paymentMethodId: values.paymentMethod,
-    });
+    setIsSubmitting(true);
 
-    if (order) {
-      navigate('/order-confirmation');
-    } else {
-      navigate('/cart');
+    try {
+      const order = await onCompleteCheckout({
+        customer: {
+          fullName: values.fullName.trim(),
+          email: values.email.trim(),
+          phone: values.phone.trim(),
+          address: values.address.trim(),
+          city: values.city.trim(),
+          postalCode: values.postalCode.trim(),
+        },
+        shippingMethodId: values.shippingMethod,
+        paymentMethodId: values.paymentMethod,
+      });
+
+      if (order) {
+        navigate('/order-confirmation');
+      } else {
+        navigate('/cart');
+      }
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'No fue posible completar la compra. Intenta nuevamente.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,6 +167,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Nombre completo</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="fullName"
                   value={values.fullName}
                   onChange={handleChange}
@@ -162,6 +180,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Correo electrónico</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="email"
                   value={values.email}
                   onChange={handleChange}
@@ -175,6 +194,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Teléfono</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="phone"
                   value={values.phone}
                   onChange={handleChange}
@@ -187,6 +207,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Dirección</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="address"
                   value={values.address}
                   onChange={handleChange}
@@ -199,6 +220,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Ciudad</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="city"
                   value={values.city}
                   onChange={handleChange}
@@ -211,6 +233,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <span className={styles.label}>Código postal</span>
                 <input
                   className={styles.input}
+                  disabled={isSubmitting}
                   name="postalCode"
                   value={values.postalCode}
                   onChange={handleChange}
@@ -230,6 +253,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <label key={option.id} className={styles.optionCard}>
                   <input
                     type="radio"
+                    disabled={isSubmitting}
                     name="shippingMethod"
                     value={option.id}
                     checked={values.shippingMethod === option.id}
@@ -255,6 +279,7 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
                 <label key={option.id} className={styles.optionCard}>
                   <input
                     type="radio"
+                    disabled={isSubmitting}
                     name="paymentMethod"
                     value={option.id}
                     checked={values.paymentMethod === option.id}
@@ -272,16 +297,19 @@ function Checkout({ cartItems, user, onCompleteCheckout }) {
             ) : null}
           </section>
 
+          {submitError ? <p className={styles.error}>{submitError}</p> : null}
+
           <div className={styles.actions}>
             <button
               type="button"
               className={styles.secondaryButton}
+              disabled={isSubmitting}
               onClick={() => navigate('/cart')}
             >
               Volver
             </button>
-            <button type="submit" className={styles.primaryButton}>
-              Confirmar compra
+            <button type="submit" className={styles.primaryButton} disabled={isSubmitting}>
+              {isSubmitting ? 'Procesando compra...' : 'Confirmar compra'}
             </button>
           </div>
         </form>

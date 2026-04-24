@@ -7,27 +7,28 @@ import { DEFAULT_ADMIN_USER } from '../utils/authStorage';
 
 function Login() {
   const [values, setValues] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [formError, setFormError] = useState('');
+  const { authError, clearAuthError, isSubmittingAuth, login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setValues((currentValues) => ({ ...currentValues, [name]: value }));
-    setError('');
+    setFormError('');
+    clearAuthError();
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const result = login({
+    const result = await login({
       email: values.email.trim(),
       password: values.password,
     });
 
     if (!result.ok) {
-      setError(result.error);
+      setFormError(result.error ?? 'No fue posible iniciar sesión.');
       return;
     }
 
@@ -58,6 +59,7 @@ function Login() {
             <span className={styles.label}>Correo electrónico</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="email"
               value={values.email}
               onChange={handleChange}
@@ -70,6 +72,7 @@ function Login() {
             <span className={styles.label}>Contraseña</span>
             <input
               className={styles.input}
+              disabled={isSubmittingAuth}
               name="password"
               value={values.password}
               onChange={handleChange}
@@ -78,10 +81,10 @@ function Login() {
             />
           </label>
 
-          {error ? <p className={styles.error}>{error}</p> : null}
+          {formError || authError ? <p className={styles.error}>{formError || authError}</p> : null}
 
-          <button type="submit" className={styles.primaryButton}>
-            Ingresar
+          <button type="submit" className={styles.primaryButton} disabled={isSubmittingAuth}>
+            {isSubmittingAuth ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
 

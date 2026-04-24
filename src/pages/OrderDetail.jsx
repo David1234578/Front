@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import useAuth from '../hooks/useAuth';
@@ -10,11 +10,68 @@ function OrderDetail() {
   const navigate = useNavigate();
   const { orderId } = useParams();
   const { currentUser } = useAuth();
+  const [order, setOrder] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const order = useMemo(
-    () => orderService.getOrderByIdForUser(currentUser?.id, orderId),
-    [currentUser?.id, orderId]
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOrder = async () => {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const nextOrder = await orderService.getOrderByIdForUserAsync(currentUser?.id, orderId);
+
+        if (isMounted) {
+          setOrder(nextOrder);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar el detalle de la orden.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadOrder();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id, orderId]);
+
+  if (isLoading) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.emptyState}>
+          <p className={styles.eyebrow}>Semana 14</p>
+          <h1 className={styles.title}>Detalle de orden</h1>
+          <p className={styles.subtitle}>Cargando información de la orden solicitada...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.emptyState}>
+          <p className={styles.eyebrow}>Semana 14</p>
+          <h1 className={styles.title}>Detalle de orden</h1>
+          <p className={styles.subtitle}>{loadError}</p>
+        </div>
+      </section>
+    );
+  }
 
   if (!order) {
     return (

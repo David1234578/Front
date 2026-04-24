@@ -56,6 +56,19 @@
   font-size: 0.95rem;
 }
 
+.input:disabled,
+.textarea:disabled {
+  background: var(--gray-100);
+  cursor: not-allowed;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -75,6 +88,12 @@
 
 .btnPrimary:hover {
   background: var(--primary-dark);
+}
+
+.btnPrimary:disabled,
+.btnSecondary:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .btnSecondary {

@@ -107,13 +107,13 @@ function App() {
     setCartItems([]);
   };
 
-  const handleCompleteCheckout = ({ customer, shippingMethodId, paymentMethodId }) => {
+  const handleCompleteCheckout = async ({ customer, shippingMethodId, paymentMethodId }) => {
     if (cartItems.length === 0) {
       return null;
     }
 
     const totals = calculateOrderTotals(cartItems, shippingMethodId);
-    const order = orderService.createOrder({
+    const order = await orderService.createOrderAsync({
       userId: currentUser?.id ?? '',
       items: cartItems.map((item) => ({ ...item })),
       customer,

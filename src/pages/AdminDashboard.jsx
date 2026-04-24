@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import adminService from '../services/adminService';
@@ -7,7 +7,46 @@ import { formatCOP } from '../utils/formatCOP';
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const { products, orders, users } = useMemo(() => adminService.getDashboardSnapshot(), []);
+  const [snapshot, setSnapshot] = useState({ products: [], orders: [], users: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSnapshot = async () => {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const nextSnapshot = await adminService.getDashboardSnapshotAsync();
+
+        if (isMounted) {
+          setSnapshot(nextSnapshot);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(
+            error instanceof Error && error.message
+              ? error.message
+              : 'No fue posible cargar el panel administrativo.'
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadSnapshot();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const { products, orders, users } = snapshot;
 
   const stats = useMemo(() => {
     const totalRevenue = orders.reduce((total, order) => total + (order.totals?.total ?? 0), 0);
@@ -24,6 +63,26 @@ function AdminDashboard() {
 
   const recentOrders = useMemo(() => orders.slice(0, 5), [orders]);
   const recentUsers = useMemo(() => users.slice(0, 5), [users]);
+
+  if (isLoading) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.card}>
+          <p className={styles.emptyText}>Cargando métricas administrativas...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className={styles.container}>
+        <div className={styles.card}>
+          <p className={styles.emptyText}>{loadError}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.container}>

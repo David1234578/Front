@@ -1,6 +1,7 @@
 import { loadProducts, saveProducts } from '../utils/productsStorage';
 
 const normalizeId = (value) => Number(value);
+const toAsyncResult = (callback) => Promise.resolve().then(callback);
 
 function getProducts() {
   return loadProducts();
@@ -37,13 +38,33 @@ function deleteProduct(productId, currentProducts = getProducts()) {
   return persistProducts(currentProducts.filter((product) => product.id !== normalizedId));
 }
 
+function getProductsAsync() {
+  return toAsyncResult(() => getProducts());
+}
+
+function createProductAsync(product, currentProducts = getProducts()) {
+  return toAsyncResult(() => createProduct(product, currentProducts));
+}
+
+function updateProductAsync(updatedProduct, currentProducts = getProducts()) {
+  return toAsyncResult(() => updateProduct(updatedProduct, currentProducts));
+}
+
+function deleteProductAsync(productId, currentProducts = getProducts()) {
+  return toAsyncResult(() => deleteProduct(productId, currentProducts));
+}
+
 const productService = {
   createProduct,
+  createProductAsync,
   deleteProduct,
+  deleteProductAsync,
   getProductById,
   getProducts,
+  getProductsAsync,
   persistProducts,
   updateProduct,
+  updateProductAsync,
 };
 
 export { productService };

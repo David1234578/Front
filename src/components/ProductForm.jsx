@@ -11,7 +11,14 @@ const emptyValues = {
   description: '',
 };
 
-function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
+function ProductForm({
+  initialValues,
+  onSubmit,
+  onCancel,
+  isEditing = false,
+  isSubmitting = false,
+  submitError = '',
+}) {
   const [values, setValues] = useState(emptyValues);
 
   useEffect(() => {
@@ -34,7 +41,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
     setValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const name = values.name.trim();
@@ -52,7 +59,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
     if (!Number.isFinite(price) || price <= 0) return;
     if (!Number.isFinite(stock) || stock < 0) return;
 
-    onSubmit({
+    const result = await onSubmit({
       ...initialValues,
       name,
       category,
@@ -63,7 +70,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
       rating,
     });
 
-    if (!isEditing) {
+    if (!isEditing && result?.ok !== false) {
       setValues(emptyValues);
     }
   };
@@ -80,6 +87,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
           <span className={styles.label}>Nombre</span>
           <input
             className={styles.input}
+            disabled={isSubmitting}
             name="name"
             value={values.name}
             onChange={handleChange}
@@ -91,6 +99,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
           <span className={styles.label}>Categoría</span>
           <input
             className={styles.input}
+            disabled={isSubmitting}
             name="category"
             value={values.category}
             onChange={handleChange}
@@ -103,6 +112,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
             <span className={styles.label}>Precio</span>
             <input
               className={styles.input}
+              disabled={isSubmitting}
               name="price"
               type="number"
               min="1"
@@ -116,6 +126,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
             <span className={styles.label}>Stock</span>
             <input
               className={styles.input}
+              disabled={isSubmitting}
               name="stock"
               type="number"
               min="0"
@@ -130,6 +141,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
           <span className={styles.label}>Imagen (URL)</span>
           <input
             className={styles.input}
+            disabled={isSubmitting}
             name="image"
             value={values.image}
             onChange={handleChange}
@@ -141,6 +153,7 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
           <span className={styles.label}>Descripción</span>
           <textarea
             className={styles.textarea}
+            disabled={isSubmitting}
             name="description"
             value={values.description}
             onChange={handleChange}
@@ -149,15 +162,28 @@ function ProductForm({ initialValues, onSubmit, onCancel, isEditing = false }) {
           />
         </label>
 
+        {submitError ? <p className={styles.error}>{submitError}</p> : null}
+
         <div className={styles.actions}>
           {onCancel ? (
-            <button className={styles.btnSecondary} type="button" onClick={onCancel}>
+            <button
+              className={styles.btnSecondary}
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancelar
             </button>
           ) : null}
 
-          <button className={styles.btnPrimary} type="submit">
-            {isEditing ? 'Guardar cambios' : 'Agregar producto'}
+          <button className={styles.btnPrimary} type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? isEditing
+                ? 'Guardando...'
+                : 'Agregando...'
+              : isEditing
+                ? 'Guardar cambios'
+                : 'Agregar producto'}
           </button>
         </div>
       </form>
