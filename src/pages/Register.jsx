@@ -46,11 +46,11 @@ function Register() {
   return (
     <section className={styles.container}>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>Semana 11</p>
+        <p className={styles.eyebrow}>Semana 12</p>
         <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>
-          Registra un usuario local para mantener sesión, proteger rutas y asociar compras a tu
-          perfil.
+          Registra un usuario local con rol cliente para mantener sesión, proteger rutas y asociar
+          compras a tu perfil.
         </p>
 
         <form className={styles.form} onSubmit={handleSubmit}>

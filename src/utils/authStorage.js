@@ -1,5 +1,26 @@
 const USERS_STORAGE_KEY = 'authUsers';
 const SESSION_STORAGE_KEY = 'authSession';
+const DEFAULT_ROLE = 'user';
+const ADMIN_ROLE = 'admin';
+const DEFAULT_ADMIN_USER = {
+  id: 'USR-ADMIN-001',
+  name: 'Admin CESDE',
+  email: 'admin@cesde.local',
+  password: 'Admin123!',
+  role: ADMIN_ROLE,
+  phone: '3000000000',
+  address: 'Campus principal',
+  city: 'Medellin',
+  postalCode: '050001',
+};
+
+const normalizeRole = (role) => {
+  const normalizedRole = String(role ?? '')
+    .trim()
+    .toLowerCase();
+
+  return normalizedRole === ADMIN_ROLE ? ADMIN_ROLE : DEFAULT_ROLE;
+};
 
 const normalizeUser = (user) => ({
   id: String(user?.id ?? ''),
@@ -8,6 +29,7 @@ const normalizeUser = (user) => ({
     .trim()
     .toLowerCase(),
   password: String(user?.password ?? ''),
+  role: normalizeRole(user?.role),
   phone: String(user?.phone ?? '').trim(),
   address: String(user?.address ?? '').trim(),
   city: String(user?.city ?? '').trim(),
@@ -25,6 +47,7 @@ const sanitizeSessionUser = (user) => {
     id: normalizedUser.id,
     name: normalizedUser.name,
     email: normalizedUser.email,
+    role: normalizedUser.role,
     phone: normalizedUser.phone,
     address: normalizedUser.address,
     city: normalizedUser.city,
@@ -51,10 +74,28 @@ const readStorageArray = (storageKey) => {
   }
 };
 
+const ensureAdminUser = (users) => {
+  const normalizedUsers = Array.isArray(users)
+    ? users.map(normalizeUser).filter((user) => user.id && user.name && user.email && user.password)
+    : [];
+
+  const hasAdmin = normalizedUsers.some((user) => user.role === ADMIN_ROLE);
+
+  if (hasAdmin) {
+    return normalizedUsers;
+  }
+
+  return [normalizeUser(DEFAULT_ADMIN_USER), ...normalizedUsers];
+};
+
 export function loadUsers() {
-  return readStorageArray(USERS_STORAGE_KEY)
-    .map(normalizeUser)
-    .filter((user) => user.id && user.name && user.email && user.password);
+  const users = ensureAdminUser(readStorageArray(USERS_STORAGE_KEY));
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+  }
+
+  return users;
 }
 
 export function saveUsers(users) {
@@ -77,6 +118,7 @@ export function createUser(userData) {
   const nextUser = normalizeUser({
     ...userData,
     id: `USR-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    role: DEFAULT_ROLE,
   });
   const currentUsers = loadUsers();
 
@@ -153,4 +195,4 @@ export function clearSessionUser() {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
-export { SESSION_STORAGE_KEY, USERS_STORAGE_KEY };
+export { ADMIN_ROLE, DEFAULT_ADMIN_USER, DEFAULT_ROLE, SESSION_STORAGE_KEY, USERS_STORAGE_KEY };

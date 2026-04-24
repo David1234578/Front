@@ -7,6 +7,7 @@ import styles from '../styles/Navbar.module.css';
 function Navbar({ user, onSignOut, cartItemCount = 0 }) {
   const userLabel = user?.name ?? 'Invitado';
   const isLoggedIn = Boolean(user);
+  const isAdmin = user?.role === 'admin';
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useAuth();
@@ -20,6 +21,7 @@ function Navbar({ user, onSignOut, cartItemCount = 0 }) {
     location.pathname.startsWith('/user/') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
+  const isAdminActive = location.pathname.startsWith('/admin');
 
   const handleAccountNavigation = () => {
     navigate(isLoggedIn ? '/user/profile' : '/login');
@@ -59,10 +61,24 @@ function Navbar({ user, onSignOut, cartItemCount = 0 }) {
         >
           Mi cuenta
         </button>
+        {isAdmin ? (
+          <button
+            type="button"
+            className={`${styles.link} ${isAdminActive ? styles.active : ''}`}
+            onClick={() => navigate('/admin')}
+          >
+            Admin
+          </button>
+        ) : null}
       </div>
 
       <div className={styles.auth}>
-        <span className={styles.userName}>{userLabel}</span>
+        <div className={styles.userMeta}>
+          <span className={styles.userName}>{userLabel}</span>
+          {isLoggedIn ? (
+            <span className={styles.roleBadge}>{isAdmin ? 'Administrador' : 'Cliente'}</span>
+          ) : null}
+        </div>
 
         {isLoggedIn ? (
           <button type="button" className={styles.authBtn} onClick={handleSignOut}>

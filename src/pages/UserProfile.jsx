@@ -15,6 +15,7 @@ function UserProfile() {
   const profile = {
     name: currentUser?.name || 'Invitado',
     email: currentUser?.email || 'Sin correo registrado',
+    role: currentUser?.role === 'admin' ? 'Administrador' : 'Cliente',
     phone: currentUser?.phone || latestOrder?.customer?.phone || 'Sin telefono registrado',
     address:
       currentUser?.address || latestOrder?.customer?.address || 'Aun no hay direccion registrada',
@@ -32,15 +33,24 @@ function UserProfile() {
     <section className={styles.container}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Semana 11</p>
+          <p className={styles.eyebrow}>Semana 12</p>
           <h1 className={styles.title}>Mi cuenta</h1>
           <p className={styles.subtitle}>
-            Esta vista centraliza la sesión autenticada y un resumen rápido de las órdenes del
-            usuario actual.
+            Esta vista centraliza la sesión autenticada, resume las órdenes del usuario actual y
+            ahora muestra el rol activo dentro de la aplicación.
           </p>
         </div>
 
         <div className={styles.headerActions}>
+          {currentUser?.role === 'admin' ? (
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => navigate('/admin')}
+            >
+              Ir al panel admin
+            </button>
+          ) : null}
           <button
             type="button"
             className={styles.secondaryButton}
@@ -65,6 +75,10 @@ function UserProfile() {
             <div className={styles.infoItem}>
               <span className={styles.label}>Correo</span>
               <strong>{profile.email}</strong>
+            </div>
+            <div className={styles.infoItem}>
+              <span className={styles.label}>Rol</span>
+              <strong>{profile.role}</strong>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.label}>Telefono</span>

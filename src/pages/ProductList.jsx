@@ -1,112 +1,117 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import ProductCard from '../components/ProductCard';
-import ProductForm from '../components/ProductForm';
+import ProductDetailsModal from '../components/ProductDetailsModal';
 import styles from '../styles/ProductList.module.css';
-import { loadProducts, PRODUCTS_STORAGE_KEY } from '../utils/productsStorage';
+import { loadProducts } from '../utils/productsStorage';
 
-const STORAGE_KEY = PRODUCTS_STORAGE_KEY;
+function ProductList({ cartItems = [], onAddToCart }) {
+  const [productsState] = useState(loadProducts);
+  const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-function ProductList() {
-  const [productsState, setProductsState] = useState(loadProducts);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const categories = useMemo(
+    () => Array.from(new Set(productsState.map((product) => product.category))).sort(),
+    [productsState]
+  );
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+  const cartQuantityByProductId = useMemo(
+    () => new Map(cartItems.map((item) => [item.id, item.quantity])),
+    [cartItems]
+  );
 
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(productsState));
-    } catch (error) {
-      void error;
-    }
-  }, [productsState]);
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
 
-  const handleOpenCreate = () => {
-    setEditingProduct(null);
-    setIsFormOpen(true);
-  };
+    return productsState.filter((product) => {
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const matchesQuery =
+        !normalizedQuery ||
+        String(product.name ?? '')
+          .toLowerCase()
+          .includes(normalizedQuery);
 
-  const handleCloseForm = () => {
-    setEditingProduct(null);
-    setIsFormOpen(false);
-  };
-
-  const handleAddProduct = (product) => {
-    setProductsState((prev) => {
-      const maxId = prev.reduce((acc, item) => Math.max(acc, item.id), 0);
-      const nextId = maxId + 1;
-
-      return [...prev, { ...product, id: nextId }];
+      return matchesCategory && matchesQuery;
     });
+  }, [productsState, query, selectedCategory]);
 
-    handleCloseForm();
+  const handleOpenDetails = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
   };
 
-  const handleDeleteProduct = (id) => {
-    setProductsState((prev) => prev.filter((product) => product.id !== id));
-
-    if (editingProduct?.id === id) {
-      handleCloseForm();
-    }
-  };
-
-  const handleEditStart = (product) => {
-    setEditingProduct(product);
-    setIsFormOpen(true);
-  };
-
-  const handleEditSubmit = (updatedProduct) => {
-    setProductsState((prev) =>
-      prev.map((product) => (product.id === updatedProduct.id ? updatedProduct : product))
-    );
-    handleCloseForm();
+  const handleCloseDetails = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Productos Informáticos</h1>
+        <h1 className={styles.title}>Catalogo de productos</h1>
         <p className={styles.subtitle}>
-          Encuentra los mejores productos de tecnología para tu setup
+          Explora todo el inventario disponible y agrega productos al carrito desde una vista
+          general.
         </p>
       </header>
 
-      {isFormOpen ? (
-        <ProductForm
-          initialValues={editingProduct}
-          isEditing={Boolean(editingProduct)}
-          onCancel={handleCloseForm}
-          onSubmit={editingProduct ? handleEditSubmit : handleAddProduct}
-        />
-      ) : (
-        <>
-          <div className={styles.toolbar}>
-            <button className={styles.btnAdd} type="button" onClick={handleOpenCreate}>
-              Agregar producto
-            </button>
-          </div>
+      <div className={styles.toolbar}>
+        <div className={styles.filters}>
+          <input
+            className={styles.searchInput}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar por nombre..."
+            type="search"
+          />
 
-          <div className={styles.grid}>
-            {productsState.map((product) => (
-              <ProductCard
-                key={product.id}
-                name={product.name}
-                category={product.category}
-                price={product.price}
-                rating={product.rating}
-                stock={product.stock}
-                image={product.image}
-                description={product.description}
-                onDelete={() => handleDeleteProduct(product.id)}
-                onEdit={() => handleEditStart(product)}
-              />
+          <select
+            className={styles.select}
+            value={selectedCategory}
+            onChange={(event) => setSelectedCategory(event.target.value)}
+          >
+            <option value="all">Todas las categorias</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
             ))}
-          </div>
-        </>
+          </select>
+        </div>
+      </div>
+
+      {filteredProducts.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>No hay productos que coincidan con los filtros actuales.</p>
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              category={product.category}
+              price={product.price}
+              rating={product.rating}
+              stock={product.stock}
+              image={product.image}
+              description={product.description}
+              onAddToCart={onAddToCart}
+              onDetails={() => handleOpenDetails(product)}
+              disableAddToCart={(cartQuantityByProductId.get(product.id) ?? 0) >= product.stock}
+            />
+          ))}
+        </div>
       )}
+
+      <ProductDetailsModal
+        isOpen={isModalOpen}
+        product={selectedProduct}
+        onClose={handleCloseDetails}
+      />
     </div>
   );
 }

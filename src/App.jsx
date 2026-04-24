@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import AdminRoute from './components/AdminRoute';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import useAuth from './hooks/useAuth';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminProducts from './pages/AdminProducts';
 import Cart from './pages/Cart';
 import CategoryProducts from './pages/CategoryProducts';
 import Checkout from './pages/Checkout';
@@ -14,6 +17,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import OrderDetail from './pages/OrderDetail';
 import ProductList from './pages/ProductList';
 import Register from './pages/Register';
+import Unauthorized from './pages/Unauthorized';
 import UserOrders from './pages/UserOrders';
 import UserProfile from './pages/UserProfile';
 import {
@@ -148,7 +152,10 @@ function App() {
             path="/category/:categoryName"
             element={<CategoryProducts cartItems={cartItems} onAddToCart={handleAddToCart} />}
           />
-          <Route path="/products" element={<ProductList />} />
+          <Route
+            path="/products"
+            element={<ProductList cartItems={cartItems} onAddToCart={handleAddToCart} />}
+          />
           <Route
             path="/cart"
             element={
@@ -200,6 +207,23 @@ function App() {
               <ProtectedRoute>
                 <OrderDetail />
               </ProtectedRoute>
+            }
+          />
+          <Route path="/access-denied" element={<Unauthorized />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/products"
+            element={
+              <AdminRoute>
+                <AdminProducts />
+              </AdminRoute>
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />

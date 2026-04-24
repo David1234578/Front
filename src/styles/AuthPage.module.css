@@ -36,6 +36,27 @@
   font-weight: 700;
 }
 
+.infoBox {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.credentialsList {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.credentialRow {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .form {
   display: flex;
   flex-direction: column;

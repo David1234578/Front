@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import useAuth from '../hooks/useAuth';
 import styles from '../styles/AuthPage.module.css';
+import { DEFAULT_ADMIN_USER } from '../utils/authStorage';
 
 function Login() {
   const [values, setValues] = useState({ email: '', password: '' });
@@ -37,11 +38,20 @@ function Login() {
   return (
     <section className={styles.container}>
       <div className={styles.card}>
-        <p className={styles.eyebrow}>Semana 11</p>
+        <p className={styles.eyebrow}>Semana 12</p>
         <h1 className={styles.title}>Iniciar sesión</h1>
         <p className={styles.subtitle}>
-          Accede a tu cuenta para proteger el checkout y consultar un historial propio de órdenes.
+          Accede a tu cuenta para proteger el checkout, diferenciar permisos y abrir el panel
+          administrativo cuando el rol lo permita.
         </p>
+
+        <div className={styles.infoBox}>
+          <strong>Credenciales demo de administrador</strong>
+          <div className={styles.credentialsList}>
+            <span className={styles.credentialRow}>Correo: {DEFAULT_ADMIN_USER.email}</span>
+            <span className={styles.credentialRow}>Contraseña: {DEFAULT_ADMIN_USER.password}</span>
+          </div>
+        </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <label className={styles.field}>
