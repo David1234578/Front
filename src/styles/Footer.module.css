@@ -1,10 +1,19 @@
 .footer {
   width: 100%;
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
-  color: white;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
 }
 
 .text {
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+
+.text span {
+  color: var(--primary-light);
 }
