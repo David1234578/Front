@@ -1,6 +1,6 @@
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f56a9f 0%, #f30876 100%);
+  background: var(--bg);
   display: flex;
   flex-direction: column;
 }
